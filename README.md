@@ -17,9 +17,16 @@
 
 # Sistema de Software
 
-**Nombre del Software**
+**Nombre del Software:**
 
-**Nombre**: 
+**Logo:** 
+
+**Descripción:**
+
+# Estructuras Arquitectonicas
+
+
+
 ## 1. Objective
 
 The objective of the first delivery of the project is to build a **vertical prototype** of a software system, based on an **initial architectural design**.
@@ -59,20 +66,3 @@ The objective of the first delivery of the project is to build a **vertical prot
     + Description of architectural elements and relations.
 * Prototype
   - Instructions for deploying the software system locally.
-
-### 3.2. Submission Format
-
-* The deliverable must be submitted via GitHub ([swarch2025i](https://github.com/unal-swarch/swarch2025i) repository).
-* Steps:
-  - Use the branch [prototype_1]().
-  - In the folder [project/prototype_1](), create an **X** folder (where X = the team name [1a, 1b, ..., 2a, 2b, ...]), which must include:
-    + The **artifact** in a README.md file.
-    + The source code (and other configuration files) of the prototype.
-
-### 3.3. Delivery Deadline
-
-Wednesday, May 21, 2025, before 23h59.
-
-### 3.4. Delivery Presentation
-
-Thursday, May 22, 2025 (in class).
