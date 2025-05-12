@@ -17,7 +17,7 @@
 
 # Sistema de Software
 
-**Nombre del Software:**
+**Nombre del Software:** OSP - Overwatch Sentinel Platform
 
 **Logo:** 
 
