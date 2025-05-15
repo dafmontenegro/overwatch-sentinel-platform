@@ -2,7 +2,7 @@
 
 A continuación se establecen los colores corporativos autorizados para la imagen software.
 
-## White
+## $\color{#FFFFFF}{\textsf{lorem ipsum}}$ White
 - Hex #FFFFFF
 
 - RGB 255, 255, 255
