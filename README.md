@@ -32,9 +32,37 @@ Esta solución está orientada a escenarios donde se requiere supervisión efici
 # Estructuras Arquitectonicas
 
 ## Estructura Componente y Conector (C&C)
-
 ### C&C View
 ### Descripción de los estilos arquitectónicos utilizados
+
+**1. Arquitectura Basada en Microservicios + Edge Computing (Global)**
+Edge (Raspberry Pi) actúa como un nodo de procesamiento local (bajo consumo).
+
+Backend en la nube maneja lógica de negocio, autenticación, persistencia y control de acceso.
+
+Frontend web ofrece la interfaz al usuario autenticado.
+
+**2. Arquitectura por Componentes**
+**Componente 1:** Raspberry Pi
+**Tipo de arquitectura:** Microkernel (Plug-in) + Edge Computing
+
+**Tecnologías clave:** Python, TensorFlow Lite, Flask (API REST ligera).
+
+**Estructura:**
+
+**Módulo de visión por computadora:** detección de objetos en tiempo real.
+
+**Módulo de zona segura:** define y monitorea el área de vigilancia.
+
+**Módulo de grabación de video:** activa grabación solo cuando se detecta actividad.
+
+**Módulo de envío de logs:** transforma eventos a JSON y los expone por API.
+
+**Módulo de sincronización de videos:** sube videos a un sistema de almacenamiento en la nube (AWS S3, Google Cloud Storage, etc.).
+
+**Módulo de limpieza diaria:** borra logs y videos locales automáticamente (via cron o script en Python).
+
+
 ### Descripción de elementos arquitectónicos y relaciones
 
 ______________________________________________________________________________________________________________________________________________________________________________
