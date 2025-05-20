@@ -73,29 +73,29 @@ Cliente-Servidor: Se utiliza en la interacción entre la Raspberry Pi y los sist
 ### Descripción de elementos arquitectónicos y relaciones
 Los elementos arquitectónicos definidos en la estructura C&C del componente Raspberry Pi incluyen:
 
-Componentes (Elementos Activos):
+**Componentes (Elementos Activos):**
 
-Raspberry Pi (núcleo): Nodo físico y lógico que centraliza la coordinación de los módulos. Ejecuta el software principal de detección y control.
+    **Raspberry Pi (núcleo):** Nodo físico y lógico que centraliza la coordinación de los módulos. Ejecuta el software principal de detección y control.
+    
+    **Módulo de Visión por Computadora:** Utiliza TensorFlow Lite para detectar objetos de interés en tiempo real. Está directamente conectado al núcleo y emite eventos cuando identifica un objeto válido.
+    
+    **Módulo de Zona Segura:** Define coordenadas dentro del campo visual como área monitoreada. Evalúa si los objetos detectados entran en esta zona y activa alertas.
+    
+    **Módulo de Grabación de Video:** Se activa a partir de eventos generados por el módulo anterior. Administra el uso de la cámara y almacenamiento local temporal.
+    
+    **Módulo de Envío de Logs (Log API):** Convierte los eventos relevantes en mensajes JSON estructurados y los envía al Backend a través de una API REST.
+    
+    **Módulo de Sincronización de Videos (Sync API):** Sube automáticamente los archivos de video generados a un servicio de almacenamiento en la nube.
+    
+    **Módulo de Limpieza Diaria (Daily Cleanup):** Ejecutado con cron o script programado en Python, borra diariamente los archivos locales (videos y logs) para liberar espacio.
 
-Módulo de Visión por Computadora: Utiliza TensorFlow Lite para detectar objetos de interés en tiempo real. Está directamente conectado al núcleo y emite eventos cuando identifica un objeto válido.
+**Conectores (Relaciones):**
 
-Módulo de Zona Segura: Define coordenadas dentro del campo visual como área monitoreada. Evalúa si los objetos detectados entran en esta zona y activa alertas.
-
-Módulo de Grabación de Video: Se activa a partir de eventos generados por el módulo anterior. Administra el uso de la cámara y almacenamiento local temporal.
-
-Módulo de Envío de Logs (Log API): Convierte los eventos relevantes en mensajes JSON estructurados y los envía al Backend a través de una API REST.
-
-Módulo de Sincronización de Videos (Sync API): Sube automáticamente los archivos de video generados a un servicio de almacenamiento en la nube.
-
-Módulo de Limpieza Diaria (Daily Cleanup): Ejecutado con cron o script programado en Python, borra diariamente los archivos locales (videos y logs) para liberar espacio.
-
-Conectores (Relaciones):
-
-Llamadas internas (invocación por interfaz): Entre el núcleo (Raspberry Pi) y los módulos de visión, zona segura, grabación, y limpieza. La comunicación se da mediante llamadas a funciones, eventos o señales internas.
-
-Conectores de red HTTP (REST API): El módulo Log API y el módulo Sync API utilizan protocolos HTTP para conectarse con el backend y la nube respectivamente. Esta conexión está asegurada bajo HTTPS.
-
-Canal de almacenamiento externo: El componente se conecta de forma asíncrona a un sistema de almacenamiento en la nube (Cloud Storage), usado como repositorio persistente de videos.
+    Llamadas internas (invocación por interfaz): Entre el núcleo (Raspberry Pi) y los módulos de visión, zona segura, grabación, y limpieza. La comunicación se da mediante llamadas a funciones, eventos o señales internas.
+    
+    Conectores de red HTTP (REST API): El módulo Log API y el módulo Sync API utilizan protocolos HTTP para conectarse con el backend y la nube respectivamente. Esta conexión está asegurada bajo HTTPS.
+    
+    Canal de almacenamiento externo: El componente se conecta de forma asíncrona a un sistema de almacenamiento en la nube (Cloud Storage), usado como repositorio persistente de videos.
 
 ______________________________________________________________________________________________________________________________________________________________________________
 
