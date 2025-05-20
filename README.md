@@ -5,12 +5,12 @@
 
 **Integrantes:** 
 
-    - Santiago Barrera Berrio (Leading Architect - First Delivery)
-    - Cristian Alejandro Beltran Rojas
-    - Daniel Felipe Montenegro Herrera
-    - Breyner Ismael Ciro Otero
-    - Juan Felipe Fontecha Vasquez
-    - Miguelangel Mosquera
+- Santiago Barrera Berrio
+- Cristian Alejandro Beltran Rojas
+- Daniel Felipe Montenegro Herrera
+- Breyner Ismael Ciro Otero
+- Juan Felipe Fontecha Vasquez
+- Miguelangel Mosquera
 
 # Sistema de Software
 
