@@ -29,6 +29,7 @@ Los videos generados se almacenan en un servidor central accesible mediante una 
 
 Esta solución está orientada a escenarios donde se requiere supervisión eficiente y automática, con un diseño modular que permitirá, en futuras fases, incluir funcionalidades adicionales como el seguimiento (tracking) y el monitoreo continuo de objetos.
 
+
 # Estructuras Arquitectonicas
 
 ## Estructura Componente y Conector (C&C)
@@ -62,8 +63,39 @@ Frontend web ofrece la interfaz al usuario autenticado.
 
 **Módulo de limpieza diaria:** borra logs y videos locales automáticamente (via cron o script en Python).
 
+En el componente de Edge Computing basado en Raspberry Pi se emplean dos estilos arquitectónicos principales:
+
+Microkernel (también conocido como Plug-in Architecture): Este estilo se adopta para permitir la extensión y evolución modular del sistema, donde la funcionalidad básica de la Raspberry Pi se mantiene en el núcleo, y los módulos como visión por computadora, detección de zonas seguras, grabación de video y limpieza diaria actúan como plug-ins que interactúan con el núcleo a través de interfaces bien definidas.
+
+Cliente-Servidor: Se utiliza en la interacción entre la Raspberry Pi y los sistemas externos (Backend y almacenamiento en la nube). La Raspberry Pi actúa como cliente al enviar datos mediante API RESTful a servicios en la nube como el Log API y al cargar archivos al almacenamiento de video (por ejemplo, AWS S3), mientras que los servicios remotos actúan como servidores.
+
 
 ### Descripción de elementos arquitectónicos y relaciones
+Los elementos arquitectónicos definidos en la estructura C&C del componente Raspberry Pi incluyen:
+
+Componentes (Elementos Activos):
+
+Raspberry Pi (núcleo): Nodo físico y lógico que centraliza la coordinación de los módulos. Ejecuta el software principal de detección y control.
+
+Módulo de Visión por Computadora: Utiliza TensorFlow Lite para detectar objetos de interés en tiempo real. Está directamente conectado al núcleo y emite eventos cuando identifica un objeto válido.
+
+Módulo de Zona Segura: Define coordenadas dentro del campo visual como área monitoreada. Evalúa si los objetos detectados entran en esta zona y activa alertas.
+
+Módulo de Grabación de Video: Se activa a partir de eventos generados por el módulo anterior. Administra el uso de la cámara y almacenamiento local temporal.
+
+Módulo de Envío de Logs (Log API): Convierte los eventos relevantes en mensajes JSON estructurados y los envía al Backend a través de una API REST.
+
+Módulo de Sincronización de Videos (Sync API): Sube automáticamente los archivos de video generados a un servicio de almacenamiento en la nube.
+
+Módulo de Limpieza Diaria (Daily Cleanup): Ejecutado con cron o script programado en Python, borra diariamente los archivos locales (videos y logs) para liberar espacio.
+
+Conectores (Relaciones):
+
+Llamadas internas (invocación por interfaz): Entre el núcleo (Raspberry Pi) y los módulos de visión, zona segura, grabación, y limpieza. La comunicación se da mediante llamadas a funciones, eventos o señales internas.
+
+Conectores de red HTTP (REST API): El módulo Log API y el módulo Sync API utilizan protocolos HTTP para conectarse con el backend y la nube respectivamente. Esta conexión está asegurada bajo HTTPS.
+
+Canal de almacenamiento externo: El componente se conecta de forma asíncrona a un sistema de almacenamiento en la nube (Cloud Storage), usado como repositorio persistente de videos.
 
 ______________________________________________________________________________________________________________________________________________________________________________
 
