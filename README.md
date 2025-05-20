@@ -44,30 +44,32 @@ Backend en la nube maneja lógica de negocio, autenticación, persistencia y con
 Frontend web ofrece la interfaz al usuario autenticado.
 
 **2. Arquitectura por Componentes**
+
 **Componente 1:** Raspberry Pi
+
 **Tipo de arquitectura:** Microkernel (Plug-in) + Edge Computing
 
 **Tecnologías clave:** Python, TensorFlow Lite, Flask (API REST ligera).
 
 **Estructura:**
 
-**Módulo de visión por computadora:** detección de objetos en tiempo real.
+- **Módulo de visión por computadora:** detección de objetos en tiempo real.
 
-**Módulo de zona segura:** define y monitorea el área de vigilancia.
+- **Módulo de zona segura:** define y monitorea el área de vigilancia.
 
-**Módulo de grabación de video:** activa grabación solo cuando se detecta actividad.
+- **Módulo de grabación de video:** activa grabación solo cuando se detecta actividad.
 
-**Módulo de envío de logs:** transforma eventos a JSON y los expone por API.
+- **Módulo de envío de logs:** transforma eventos a JSON y los expone por API.
 
-**Módulo de sincronización de videos:** sube videos a un sistema de almacenamiento en la nube (AWS S3, Google Cloud Storage, etc.).
+- **Módulo de sincronización de videos:** sube videos a un sistema de almacenamiento en la nube (AWS S3, Google Cloud Storage, etc.).
 
-**Módulo de limpieza diaria:** borra logs y videos locales automáticamente (via cron o script en Python).
+- **Módulo de limpieza diaria:** borra logs y videos locales automáticamente (via cron o script en Python).
 
 En el componente de Edge Computing basado en Raspberry Pi se emplean dos estilos arquitectónicos principales:
 
-Microkernel (también conocido como Plug-in Architecture): Este estilo se adopta para permitir la extensión y evolución modular del sistema, donde la funcionalidad básica de la Raspberry Pi se mantiene en el núcleo, y los módulos como visión por computadora, detección de zonas seguras, grabación de video y limpieza diaria actúan como plug-ins que interactúan con el núcleo a través de interfaces bien definidas.
+- **Microkernel (también conocido como Plug-in Architecture):** Este estilo se adopta para permitir la extensión y evolución modular del sistema, donde la funcionalidad básica de la Raspberry Pi se mantiene en el núcleo, y los módulos como visión por computadora, detección de zonas seguras, grabación de video y limpieza diaria actúan como plug-ins que interactúan con el núcleo a través de interfaces bien definidas.
 
-Cliente-Servidor: Se utiliza en la interacción entre la Raspberry Pi y los sistemas externos (Backend y almacenamiento en la nube). La Raspberry Pi actúa como cliente al enviar datos mediante API RESTful a servicios en la nube como el Log API y al cargar archivos al almacenamiento de video (por ejemplo, AWS S3), mientras que los servicios remotos actúan como servidores.
+- **Cliente-Servidor:** Se utiliza en la interacción entre la Raspberry Pi y los sistemas externos (Backend y almacenamiento en la nube). La Raspberry Pi actúa como cliente al enviar datos mediante API RESTful a servicios en la nube como el Log API y al cargar archivos al almacenamiento de video (por ejemplo, AWS S3), mientras que los servicios remotos actúan como servidores.
 
 
 ### Descripción de elementos arquitectónicos y relaciones
@@ -91,11 +93,11 @@ Los elementos arquitectónicos definidos en la estructura C&C del componente Ras
 
 **Conectores (Relaciones):**
 
-    Llamadas internas (invocación por interfaz): Entre el núcleo (Raspberry Pi) y los módulos de visión, zona segura, grabación, y limpieza. La comunicación se da mediante llamadas a funciones, eventos o señales internas.
+- Llamadas internas (invocación por interfaz): Entre el núcleo (Raspberry Pi) y los módulos de visión, zona segura, grabación, y limpieza. La comunicación se da mediante llamadas a funciones, eventos o señales internas.
     
-    Conectores de red HTTP (REST API): El módulo Log API y el módulo Sync API utilizan protocolos HTTP para conectarse con el backend y la nube respectivamente. Esta conexión está asegurada bajo HTTPS.
+- Conectores de red HTTP (REST API): El módulo Log API y el módulo Sync API utilizan protocolos HTTP para conectarse con el backend y la nube respectivamente. Esta conexión está asegurada bajo HTTPS.
     
-    Canal de almacenamiento externo: El componente se conecta de forma asíncrona a un sistema de almacenamiento en la nube (Cloud Storage), usado como repositorio persistente de videos.
+- Canal de almacenamiento externo: El componente se conecta de forma asíncrona a un sistema de almacenamiento en la nube (Cloud Storage), usado como repositorio persistente de videos.
 
 ______________________________________________________________________________________________________________________________________________________________________________
 
