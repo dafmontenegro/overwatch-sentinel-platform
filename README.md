@@ -75,19 +75,19 @@ Los elementos arquitectónicos definidos en la estructura C&C del componente Ras
 
 **Componentes (Elementos Activos):**
 
-    **Raspberry Pi (núcleo):** Nodo físico y lógico que centraliza la coordinación de los módulos. Ejecuta el software principal de detección y control.
+- **Raspberry Pi (núcleo):** Nodo físico y lógico que centraliza la coordinación de los módulos. Ejecuta el software principal de detección y control.
     
-    **Módulo de Visión por Computadora:** Utiliza TensorFlow Lite para detectar objetos de interés en tiempo real. Está directamente conectado al núcleo y emite eventos cuando identifica un objeto válido.
+- **Módulo de Visión por Computadora:** Utiliza TensorFlow Lite para detectar objetos de interés en tiempo real. Está directamente conectado al núcleo y emite eventos cuando identifica un objeto válido.
     
-    **Módulo de Zona Segura:** Define coordenadas dentro del campo visual como área monitoreada. Evalúa si los objetos detectados entran en esta zona y activa alertas.
+- **Módulo de Zona Segura:** Define coordenadas dentro del campo visual como área monitoreada. Evalúa si los objetos detectados entran en esta zona y activa alertas.
     
-    **Módulo de Grabación de Video:** Se activa a partir de eventos generados por el módulo anterior. Administra el uso de la cámara y almacenamiento local temporal.
+- **Módulo de Grabación de Video:** Se activa a partir de eventos generados por el módulo anterior. Administra el uso de la cámara y almacenamiento local temporal.
     
-    **Módulo de Envío de Logs (Log API):** Convierte los eventos relevantes en mensajes JSON estructurados y los envía al Backend a través de una API REST.
+- **Módulo de Envío de Logs (Log API):** Convierte los eventos relevantes en mensajes JSON estructurados y los envía al Backend a través de una API REST.
     
-    **Módulo de Sincronización de Videos (Sync API):** Sube automáticamente los archivos de video generados a un servicio de almacenamiento en la nube.
+- **Módulo de Sincronización de Videos (Sync API):** Sube automáticamente los archivos de video generados a un servicio de almacenamiento en la nube.
     
-    **Módulo de Limpieza Diaria (Daily Cleanup):** Ejecutado con cron o script programado en Python, borra diariamente los archivos locales (videos y logs) para liberar espacio.
+- **Módulo de Limpieza Diaria (Daily Cleanup):** Ejecutado con cron o script programado en Python, borra diariamente los archivos locales (videos y logs) para liberar espacio.
 
 **Conectores (Relaciones):**
 
