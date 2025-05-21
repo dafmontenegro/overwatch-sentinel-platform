@@ -173,7 +173,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                 {/* {location.pathname === '/settings' && 'Configuración'} */}
               </h2>
             </div>
-            <div className="flex items-center space-x-4">
+            {/* <div className="flex items-center space-x-4">
               <div className="relative">
                 <button className="p-1 text-gray-400 rounded-full hover:bg-whitegray focus:outline-none">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -182,7 +182,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                 </button>
                 <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
               </div>
-            </div>
+            </div> */}
           </div>
         </header>
 
