@@ -24,15 +24,13 @@ class ObjectDetector:
 
 class Camera:
     def __init__(self, frame_width=1280, frame_height=720, camera_number=0, fallback_video="sample.mp4"):
-        # Intenta abrir la cámara real
+        self.use_fallback = False
         self.video_capture = cv2.VideoCapture(camera_number)
-        self.using_fallback = False
 
         if not self.video_capture.isOpened():
-            logging.warning("⚠️ No se pudo acceder a la cámara. Usando video de prueba.")
-            # Intenta abrir el video de respaldo
+            logging.warning("Unable to access camera. Falling back to sample video.")
             self.video_capture = cv2.VideoCapture(fallback_video)
-            self.using_fallback = True
+            self.use_fallback = True
 
         self.video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, frame_width)
         self.video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, frame_height)
@@ -40,8 +38,8 @@ class Camera:
     def frame(self):
         success, frame = self.video_capture.read()
 
-        # Si usamos video de respaldo y llegamos al final, reiniciamos
-        if self.using_fallback and not success:
+        if self.use_fallback and not success:
+            # Loop the fallback video
             self.video_capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
             success, frame = self.video_capture.read()
 
