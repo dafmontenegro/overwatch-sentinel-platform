@@ -153,7 +153,7 @@ Esta arquitectura promueve un diseño distribuido robusto, en el cual cada eleme
 
    ![image](https://github.com/user-attachments/assets/c8a5f356-307d-4d25-a08c-feb103cb696b) 
   
-7.Verificar la creación de los contenedores y de las imagenes en docker, y verificar que todos se encuentren ejecutando.
+7. Verificar la creación de los contenedores y de las imagenes en docker, y verificar que todos se encuentren ejecutando.
 
    **Contenedores:**
 
@@ -170,30 +170,45 @@ Esta arquitectura promueve un diseño distribuido robusto, en el cual cada eleme
 8. Ejecutar el archivo de prueba .................................
 
 8. Comprobar la ejecución del backend.
-   8.1. Abrir el navegador de preferencia y verificar las siguientes direcciones:
-   
-      8.1.1. **http://localhost:8000:** Se visualizará el mensaje *{"message":"Welcome to the backend called logic system"}*, el cual indica que el servicio de backend está                      corriendo correctamente.
-   
-            ![image](https://github.com/user-attachments/assets/4bca01ef-1db7-489c-aa8d-53c2fe2570f9)
 
-      8.1.2. **http://localhost:8000/video:** Se puede apreciar la captura de video en vivo.
-            ![Sin título](https://github.com/user-attachments/assets/a68e4551-1f87-438b-b481-265cb64ef7cc)
-
-      8.1.3. **http://localhost:8000/auth/google:** Permite probar el inicio de sesión utilizando el servicio de OAuth2 de Google Cloud. Se debe seleccionar la cuenta a utilizar.
-            ![Sin título](https://github.com/user-attachments/assets/2521c2d5-35d1-4dbf-ad27-3610d8d1a0ac)
+   Abrir el navegador de preferencia y verificar las siguientes direcciones:
    
-            Pulsar en *Continuar*
-            ![image](https://github.com/user-attachments/assets/9ca585e5-7e82-453e-859b-ebe8a1a33eb7)
-            Se puede apreciar el token de acceso, lo cual indica una autenticación exitosa.
-   
-            **Nota:** El token solamente es visible para el usuario que se loguea, no es visible para usuaios diferentes.  
-            ![image](https://github.com/user-attachments/assets/e114c966-1be6-43d8-b047-fd7b45f3863d)
+   8.1. **http://localhost:8000:** Se visualizará el mensaje *{"message":"Welcome to the backend called logic system"}*, el cual indica que el servicio de backend está                      corriendo correctamente.
+        ![image](https://github.com/user-attachments/assets/4bca01ef-1db7-489c-aa8d-53c2fe2570f9)
 
-      8.1.4. **http://localhost:8000/logs:** Muestra todos los eventos sucedidos en el lapso de tiempo que ha estado trabajando la captura de video.
-            ![image](https://github.com/user-attachments/assets/f85dad98-27e2-42bd-ac3f-b2d38eb096b9)
+   8.2. **http://localhost:8000/video:** Se puede apreciar la captura de video en vivo.
+        ![Sin título](https://github.com/user-attachments/assets/a68e4551-1f87-438b-b481-265cb64ef7cc)
+
+   8.3. **http://localhost:8000/auth/google:** Permite probar el inicio de sesión utilizando el servicio de OAuth2 de Google Cloud. Se debe seleccionar la cuenta a utilizar.
+        ![Sin título](https://github.com/user-attachments/assets/2521c2d5-35d1-4dbf-ad27-3610d8d1a0ac)
+        Pulsar en *Continuar*
+        ![image](https://github.com/user-attachments/assets/9ca585e5-7e82-453e-859b-ebe8a1a33eb7)
+        Se puede apreciar el token de acceso, lo cual indica una autenticación exitosa.
+
+      **Nota:** El token solamente es visible para el usuario que se loguea, no es visible para usuaios diferentes.  
+        ![image](https://github.com/user-attachments/assets/e114c966-1be6-43d8-b047-fd7b45f3863d)
+
+   8.4. **http://localhost:8000/logs:** Muestra todos los eventos sucedidos en el lapso de tiempo que ha estado trabajando la captura de video.
+        ![image](https://github.com/user-attachments/assets/f85dad98-27e2-42bd-ac3f-b2d38eb096b9)
 
 10. Verificar la ejecución del frontend.
-11. Verificar la ejecución del test.
+    
+    10.1. Abrir el navegador de preferencia y verificar la siguiente dirección: **http://localhost:5173/**
+    
+    10.2. Se mostrará la página principal del sistema.
+          ![image](https://github.com/user-attachments/assets/f02b7177-c185-4f99-8c60-b18d12c07d0f)
+
+    10.3. Para acceder a la imagen en vivo se puede presionar sobre *"Acceder al Sistema"* o sobre *"Video en Vivo"*.
+          ![image](https://github.com/user-attachments/assets/a32873fb-9005-44ed-b220-e4d8a591682f)
+          ![image](https://github.com/user-attachments/assets/ea32eb4c-420b-48f3-8c34-f84697bfc9a0)
+
+    10.4. Se puede apreciar la transmisión de video en vivo.
+          ![Sin título](https://github.com/user-attachments/assets/b984e195-7e86-4cda-83a0-e4f161f66c3b)
+
+    10.5. La transmisión puede ser pausada y reanudada pulsando sobre el ícono de play/pause.
+          ![image](https://github.com/user-attachments/assets/6be22fb6-077e-40d7-b787-6edec11578c0)
+
+
 _____________________________________________________________________________________________________________________________________________________________________________
 
 ## 1. Objective
