@@ -125,17 +125,17 @@ Esta arquitectura promueve un diseño distribuido robusto, en el cual cada eleme
    ![image](https://github.com/user-attachments/assets/792afc9b-2f21-4c0d-984a-e0e95655e753)
 
 3. Descargar los dos (2) archivos ".env" proporcionados vía (pendiente slack o acceso a drive)
-4. Colocar el archivo *.env* correspondiente a al backend en las rutas "...\overwatch-sentinel-platform-master\Compact_backend" y "...\overwatch-sentinel-platform-master".
+4. Colocar el archivo *.env* correspondiente al backend en las rutas *"...\overwatch-sentinel-platform-master\Compact_backend"* y *"...\overwatch-sentinel-platform-master"*.
 
    ![image](https://github.com/user-attachments/assets/1a096ccc-a076-462e-89a3-784cca5f8140)
 
    
-5. Colocar el archivo *.env* correspondiente a al frontend en la ruta "...\overwatch-sentinel-platform-master\osp-frontend"
+5. Colocar el archivo *.env* correspondiente al frontend en la ruta *"...\overwatch-sentinel-platform-master\osp-frontend"*
 
    ![image](https://github.com/user-attachments/assets/f6230491-f24c-4b50-8952-4d01bea73894)
 
    
-6. Posicionarse en la carpeta raiz "...\overwatch-sentinel-platform-master", abrir una terminal y ejecutar las siguientes instrucciones.
+6. Posicionarse en la carpeta raiz *"...\overwatch-sentinel-platform-master"*, abrir una terminal y ejecutar las siguientes instrucciones.
    
    6.1. docker-compose build --no-cache
 
@@ -161,25 +161,36 @@ Esta arquitectura promueve un diseño distribuido robusto, en el cual cada eleme
 
    ![image](https://github.com/user-attachments/assets/8a6179f1-f8fa-4c9d-b455-fda0ecb85bea)
 
-   **Imagenes**
+   **Imagenes:**
    
    ![image](https://github.com/user-attachments/assets/042eb701-b795-49d8-b25b-695d452e77c8)
 
    ![image](https://github.com/user-attachments/assets/1b15bf25-53a1-4cad-a505-581aba0e9774)
 
-8. Verificar la ejecución del backend.
-   8.1. Abrir el navegaor de preferencia y verificar las siguientes direcciones:
+8. Ejecutar el archivo de prueba .................................
+
+8. Comprobar la ejecución del backend.
+   8.1. Abrir el navegador de preferencia y verificar las siguientes direcciones:
    
-      8.1.1. **http://localhost:8000:**
-      
-      8.1.2. **http://localhost:8000/video:**
-      
-      8.1.3. **http://localhost:8000/auth/google:**
-      
-      8.1.4. **http://localhost:8000/logs:**
-   
-9. Verificar la ejecución del frontend.
-10. Verificar la ejecución del test.
+      8.1.1. **http://localhost:8000:** Se visualizará el mensaje *{"message":"Welcome to the backend called logic system"}*, el cual indica que el servicio de backend está                      corriendo correctamente.
+            ![image](https://github.com/user-attachments/assets/4bca01ef-1db7-489c-aa8d-53c2fe2570f9)
+
+      8.1.2. **http://localhost:8000/video:** Se puede apreciar la captura de video en vivo.
+            ![Sin título](https://github.com/user-attachments/assets/a68e4551-1f87-438b-b481-265cb64ef7cc)
+
+      8.1.3. **http://localhost:8000/auth/google:** Permite probar el inicio de sesión utilizando el servicio de OAuth2 de Google Cloud. Se debe seleccionar la cuenta a utilizar.
+            ![Sin título](https://github.com/user-attachments/assets/2521c2d5-35d1-4dbf-ad27-3610d8d1a0ac)
+            Pulsar en *Continuar*
+            ![image](https://github.com/user-attachments/assets/9ca585e5-7e82-453e-859b-ebe8a1a33eb7)
+            Se puede apreciar el token de acceso, lo cual indica una autenticación exitosa.
+            **Nota:** El token solamente es visible para el usuario que se loguea, no es visible para usuaios diferentes.  
+            ![image](https://github.com/user-attachments/assets/e114c966-1be6-43d8-b047-fd7b45f3863d)
+
+      8.1.4. **http://localhost:8000/logs:** Muestra todos los eventos sucedidos en el lapso de tiempo que ha estado trabajando la captura de video.
+            ![image](https://github.com/user-attachments/assets/f85dad98-27e2-42bd-ac3f-b2d38eb096b9)
+
+10. Verificar la ejecución del frontend.
+11. Verificar la ejecución del test.
 _____________________________________________________________________________________________________________________________________________________________________________
 
 ## 1. Objective
