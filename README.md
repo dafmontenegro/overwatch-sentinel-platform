@@ -123,17 +123,26 @@ Esta arquitectura promueve un diseño distribuido robusto, en el cual cada eleme
 2. Verificar que docker se encuentre en ejecución, en caso de no estarlo este debe ser iniciado.
 3. Descargar los archivos ".env" proporsionados vía (pendiente slack o acceso a drive)
 4. Colocar el archivo .env correspondiente a al backend en las rutas "...\overwatch-sentinel-platform-master\Compact_backend" y "...\overwatch-sentinel-platform-master".
-5. Abrir una terminal y ejecutar las siguientes instrucciones.
-  5.1. docker-compose build --no-cache
-  5.2. docker-compose up -d
-6. Verificar la ejecución del backend.
-  6.1. Abrir el navegaor de preferencia y verificar las siguientes direcciones:
-   6.1.1. **http://localhost:8000:** 
-   6.1.2. **http://localhost:8000/video:**
-   6.1.3. **http://localhost:8000/auth/google:**
-   6.1.4. **http://localhost:8000/logs:**
-8. Verificar la ejecución del frontend.
-9. Verificar la ejecución del test.
+5. Colocar el archivo .env correspondiente a al frontend en la ruta "...\overwatch-sentinel-platform-master\osp-frontend"
+6. Abrir una terminal y ejecutar las siguientes instrucciones.
+   
+  6.1. docker-compose build --no-cache
+  
+  6.2. docker-compose up -d
+  
+7. Verificar la ejecución del backend.
+7.1. Abrir el navegaor de preferencia y verificar las siguientes direcciones:
+   
+   7.1.1. **http://localhost:8000:**
+   
+   7.1.2. **http://localhost:8000/video:**
+   
+   7.1.3. **http://localhost:8000/auth/google:**
+   
+   7.1.4. **http://localhost:8000/logs:**
+   
+9. Verificar la ejecución del frontend.
+10. Verificar la ejecución del test.
 _____________________________________________________________________________________________________________________________________________________________________________
 
 ## 1. Objective
