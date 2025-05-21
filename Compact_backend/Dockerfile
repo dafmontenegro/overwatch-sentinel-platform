@@ -7,14 +7,12 @@ RUN apt-get update && \
     apt-get install -y postgresql-client && \
     rm -rf /var/lib/apt/lists/*
 
-RUN chown -R postgres:postgres /backend
-
-USER postgres
-
 COPY requirements.txt .
 COPY .env .
 COPY ./backend ./backend
 COPY wait-for-postgres.sh .
+
+RUN chmod +x wait-for-postgres.sh
 
 RUN pip install --no-cache-dir -r requirements.txt
 
