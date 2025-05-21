@@ -167,19 +167,22 @@ Esta arquitectura promueve un diseño distribuido robusto, en el cual cada eleme
 
    ![image](https://github.com/user-attachments/assets/1b15bf25-53a1-4cad-a505-581aba0e9774)
 
-8. Ejecutar el archivo de prueba .................................
+8. Ir a la carpeta *"...\overwatch-sentinel-platform-master\test"* y ejecutar el archivo app.py.
+   ![image](https://github.com/user-attachments/assets/97e707d2-76e0-4d6d-8b17-f73844f309cd)
 
-8. Comprobar la ejecución del backend.
+   Este archivo fue diseñado para ejecutar una función similar a la que realiza la Rasberry Pi del proyecto, y se realizó con la finalidad de poder probar el software sin necesidad    de una Rasberry Pi.
+
+9. Comprobar la ejecución del backend.
 
    Abrir el navegador de preferencia y verificar las siguientes direcciones:
    
-   8.1. **http://localhost:8000:** Se visualizará el mensaje *{"message":"Welcome to the backend called logic system"}*, el cual indica que el servicio de backend está                      corriendo correctamente.
+   9.1. **http://localhost:8000:** Se visualizará el mensaje *{"message":"Welcome to the backend called logic system"}*, el cual indica que el servicio de backend está                      corriendo correctamente.
         ![image](https://github.com/user-attachments/assets/4bca01ef-1db7-489c-aa8d-53c2fe2570f9)
 
-   8.2. **http://localhost:8000/video:** Se puede apreciar la captura de video en vivo.
+   9.2. **http://localhost:8000/video:** Se puede apreciar la captura de video en vivo.
         ![Sin título](https://github.com/user-attachments/assets/a68e4551-1f87-438b-b481-265cb64ef7cc)
 
-   8.3. **http://localhost:8000/auth/google:** Permite probar el inicio de sesión utilizando el servicio de OAuth2 de Google Cloud. Se debe seleccionar la cuenta a utilizar.
+   9.3. **http://localhost:8000/auth/google:** Permite probar el inicio de sesión utilizando el servicio de OAuth2 de Google Cloud. Se debe seleccionar la cuenta a utilizar.
         ![Sin título](https://github.com/user-attachments/assets/2521c2d5-35d1-4dbf-ad27-3610d8d1a0ac)
         Pulsar en *Continuar*
         ![image](https://github.com/user-attachments/assets/9ca585e5-7e82-453e-859b-ebe8a1a33eb7)
@@ -188,7 +191,7 @@ Esta arquitectura promueve un diseño distribuido robusto, en el cual cada eleme
       **Nota:** El token solamente es visible para el usuario que se loguea, no es visible para usuaios diferentes.  
         ![image](https://github.com/user-attachments/assets/e114c966-1be6-43d8-b047-fd7b45f3863d)
 
-   8.4. **http://localhost:8000/logs:** Muestra todos los eventos sucedidos en el lapso de tiempo que ha estado trabajando la captura de video.
+   9.4. **http://localhost:8000/logs:** Muestra todos los eventos sucedidos en el lapso de tiempo que ha estado trabajando la captura de video.
         ![image](https://github.com/user-attachments/assets/f85dad98-27e2-42bd-ac3f-b2d38eb096b9)
 
 10. Verificar la ejecución del frontend.
@@ -207,6 +210,8 @@ Esta arquitectura promueve un diseño distribuido robusto, en el cual cada eleme
 
     10.5. La transmisión puede ser pausada y reanudada pulsando sobre el ícono de play/pause.
           ![image](https://github.com/user-attachments/assets/6be22fb6-077e-40d7-b787-6edec11578c0)
+          ![image](https://github.com/user-attachments/assets/28ef443c-c273-44b0-a4c8-8df522c9c34c)
+
 
 
 _____________________________________________________________________________________________________________________________________________________________________________
