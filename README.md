@@ -173,6 +173,7 @@ Esta arquitectura promueve un diseño distribuido robusto, en el cual cada eleme
    8.1. Abrir el navegador de preferencia y verificar las siguientes direcciones:
    
       8.1.1. **http://localhost:8000:** Se visualizará el mensaje *{"message":"Welcome to the backend called logic system"}*, el cual indica que el servicio de backend está                      corriendo correctamente.
+   
             ![image](https://github.com/user-attachments/assets/4bca01ef-1db7-489c-aa8d-53c2fe2570f9)
 
       8.1.2. **http://localhost:8000/video:** Se puede apreciar la captura de video en vivo.
@@ -180,9 +181,11 @@ Esta arquitectura promueve un diseño distribuido robusto, en el cual cada eleme
 
       8.1.3. **http://localhost:8000/auth/google:** Permite probar el inicio de sesión utilizando el servicio de OAuth2 de Google Cloud. Se debe seleccionar la cuenta a utilizar.
             ![Sin título](https://github.com/user-attachments/assets/2521c2d5-35d1-4dbf-ad27-3610d8d1a0ac)
+   
             Pulsar en *Continuar*
             ![image](https://github.com/user-attachments/assets/9ca585e5-7e82-453e-859b-ebe8a1a33eb7)
             Se puede apreciar el token de acceso, lo cual indica una autenticación exitosa.
+   
             **Nota:** El token solamente es visible para el usuario que se loguea, no es visible para usuaios diferentes.  
             ![image](https://github.com/user-attachments/assets/e114c966-1be6-43d8-b047-fd7b45f3863d)
 
