@@ -120,26 +120,42 @@ Esta arquitectura promueve un diseño distribuido robusto, en el cual cada eleme
 # Prototipo
 
 1. Descargar o clonar el repositorio alojado en [!LINK]
-2. Verificar que docker se encuentre en ejecución, en caso de no estarlo este debe ser iniciado.
+2. Verificar que Docker se encuentre en ejecución, en caso de no estarlo este debe ser inicializado.
+   ![image](https://github.com/user-attachments/assets/883b6827-7c30-4c14-b939-443c97d7a2a5)
+
 3. Descargar los archivos ".env" proporsionados vía (pendiente slack o acceso a drive)
 4. Colocar el archivo .env correspondiente a al backend en las rutas "...\overwatch-sentinel-platform-master\Compact_backend" y "...\overwatch-sentinel-platform-master".
 5. Colocar el archivo .env correspondiente a al frontend en la ruta "...\overwatch-sentinel-platform-master\osp-frontend"
-6. Abrir una terminal y ejecutar las siguientes instrucciones.
+6. Posicionarse en la carpeta raiz "...\overwatch-sentinel-platform-master", abrir una terminal y ejecutar las siguientes instrucciones.
    
-  6.1. docker-compose build --no-cache
+   6.1. docker-compose build --no-cache
+   ![image](https://github.com/user-attachments/assets/3f6230bb-48da-4452-91eb-046e9cd028c1)
+
+   Se mostrará el resultado del Building para *web-backend* y *web-frontend*
+   ![image](https://github.com/user-attachments/assets/88729237-e992-48e5-81f3-e0dd46c9998f)
+
+   6.2. docker-compose up -d
+   ![image](https://github.com/user-attachments/assets/6f33f92d-45ea-46ef-bd66-199185315d2b)
+   
+
+   
   
-  6.2. docker-compose up -d
-  
-7. Verificar la ejecución del backend.
-7.1. Abrir el navegaor de preferencia y verificar las siguientes direcciones:
+7.Verificar la creación de los contenedores y de las imagenes en docker
+   ![image](https://github.com/user-attachments/assets/dbf5819b-eb79-4734-8508-a66f92a7ba7d)
    
-   7.1.1. **http://localhost:8000:**
+   ![image](https://github.com/user-attachments/assets/042eb701-b795-49d8-b25b-695d452e77c8)
+
+
+8. Verificar la ejecución del backend.
+   7.1. Abrir el navegaor de preferencia y verificar las siguientes direcciones:
    
-   7.1.2. **http://localhost:8000/video:**
-   
-   7.1.3. **http://localhost:8000/auth/google:**
-   
-   7.1.4. **http://localhost:8000/logs:**
+      7.1.1. **http://localhost:8000:**
+      
+      7.1.2. **http://localhost:8000/video:**
+      
+      7.1.3. **http://localhost:8000/auth/google:**
+      
+      7.1.4. **http://localhost:8000/logs:**
    
 9. Verificar la ejecución del frontend.
 10. Verificar la ejecución del test.
