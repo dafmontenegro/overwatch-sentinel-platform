@@ -6,6 +6,7 @@ from datetime import datetime
 # Third-party Imports
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.requests import Request
 from starlette.config import Config
@@ -53,6 +54,14 @@ logging.basicConfig(
 app = FastAPI(title="Video Surveillance System", description="Combined video streaming and authentication system")
 
 # Add SessionMiddleware (required for OAuth to work)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins for CORS
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods
+    allow_headers=["*"],  # Allow all headers
+)
+
 app.add_middleware(
     SessionMiddleware,
     # secret_key=os.getenv("SECRET_KEY", "default_super_secret_key")

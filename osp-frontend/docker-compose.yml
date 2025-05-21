@@ -1,0 +1,14 @@
+services:
+  web:
+    build:
+      context: .
+      target: dev
+    image: osp-frontend:dev
+    container_name: Osp-Frontend-dev
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
