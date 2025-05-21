@@ -167,7 +167,7 @@ Esta arquitectura promueve un diseño distribuido robusto, en el cual cada eleme
 
    ![image](https://github.com/user-attachments/assets/1b15bf25-53a1-4cad-a505-581aba0e9774)
 
-8. Ir a la carpeta *"...\overwatch-sentinel-platform-master\test"* y ejecutar el archivo app.py.
+8. Ir a la carpeta *"...\overwatch-sentinel-platform-master\test"* y ejecutar el archivo app.py.\
    ![image](https://github.com/user-attachments/assets/97e707d2-76e0-4d6d-8b17-f73844f309cd)
 
    Este archivo fue diseñado para ejecutar una función similar a la que realiza la Rasberry Pi del proyecto, y se realizó con la finalidad de poder probar el software sin necesidad    de una Rasberry Pi.
@@ -188,7 +188,7 @@ Esta arquitectura promueve un diseño distribuido robusto, en el cual cada eleme
         ![image](https://github.com/user-attachments/assets/9ca585e5-7e82-453e-859b-ebe8a1a33eb7)
         Se puede apreciar el token de acceso, lo cual indica una autenticación exitosa.
 
-      **Nota:** El token solamente es visible para el usuario que se loguea, no es visible para usuaios diferentes.  
+      **Nota:** El token solamente es visible para el usuario que se loguea, no es visible para usuarios diferentes.  
         ![image](https://github.com/user-attachments/assets/e114c966-1be6-43d8-b047-fd7b45f3863d)
 
    9.4. **http://localhost:8000/logs:** Muestra todos los eventos sucedidos en el lapso de tiempo que ha estado trabajando la captura de video.
@@ -211,6 +211,9 @@ Esta arquitectura promueve un diseño distribuido robusto, en el cual cada eleme
     10.5. La transmisión puede ser pausada y reanudada pulsando sobre el ícono de play/pause.\
           ![image](https://github.com/user-attachments/assets/6be22fb6-077e-40d7-b787-6edec11578c0)\
           ![image](https://github.com/user-attachments/assets/28ef443c-c273-44b0-a4c8-8df522c9c34c)
+
+    10.6. El video puede ser visto en pantalla completa, para ello se puede pulsa en el icono de la parte inferior derecha de la imágen.
+          ![Pendiente Imagen]
 
 
 
