@@ -208,8 +208,8 @@ Esta arquitectura promueve un diseño distribuido robusto, en el cual cada eleme
     10.4. Se puede apreciar la transmisión de video en vivo.
           ![Sin título](https://github.com/user-attachments/assets/b984e195-7e86-4cda-83a0-e4f161f66c3b)
 
-    10.5. La transmisión puede ser pausada y reanudada pulsando sobre el ícono de play/pause.
-          ![image](https://github.com/user-attachments/assets/6be22fb6-077e-40d7-b787-6edec11578c0)
+    10.5. La transmisión puede ser pausada y reanudada pulsando sobre el ícono de play/pause.\
+          ![image](https://github.com/user-attachments/assets/6be22fb6-077e-40d7-b787-6edec11578c0)\
           ![image](https://github.com/user-attachments/assets/28ef443c-c273-44b0-a4c8-8df522c9c34c)
 
 
