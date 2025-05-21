@@ -36,69 +36,85 @@ Esta solución está orientada a escenarios donde se requiere supervisión efici
 ### C&C View
 ### Descripción de los estilos arquitectónicos utilizados
 
-**1. Arquitectura Basada en Microservicios + Edge Computing (Global)**
-Edge (Raspberry Pi) actúa como un nodo de procesamiento local (bajo consumo).
+El sistema OSP —Overwatch Sentinel Platform— adopta de forma integral el estilo arquitectónico basado en microservicios, aplicado coherentemente desde el procesamiento local en dispositivos Raspberry Pi hasta los servicios del backend en la nube y la interfaz web del frontend.
 
-Backend en la nube maneja lógica de negocio, autenticación, persistencia y control de acceso.
+La arquitectura de microservicios implica descomponer el sistema en componentes autónomos, cada uno con una responsabilidad bien definida, que interactúan entre sí a través de interfaces ligeras (REST API sobre HTTP/HTTPS). Cada microservicio es desplegado, escalado y gestionado de forma independiente, permitiendo una mayor resiliencia, escalabilidad y facilidad de evolución del sistema.
 
-Frontend web ofrece la interfaz al usuario autenticado.
+Características clave de esta adopción:
 
-**2. Arquitectura por Componentes**
+Cada módulo del sistema cumple con el principio de única responsabilidad (Single Responsibility Principle), actuando como un microservicio incluso si reside en el borde (Edge).
 
-**Componente 1:** Raspberry Pi
+Se fomenta el bajo acoplamiento entre servicios y la alta cohesión interna.
 
-**Tipo de arquitectura:** Microkernel (Plug-in) + Edge Computing
+Las interfaces entre microservicios están bien definidas y utilizan formatos estandarizados como JSON y HTTP REST.
 
-**Tecnologías clave:** Python, TensorFlow Lite, Flask (API REST ligera).
+Se permite la integración tecnológica heterogénea: por ejemplo, Python en Raspberry Pi, Node.js o Flask en Backend, y React en Frontend, sin afectar la interoperabilidad.
 
-**Estructura:**
-
-- **Módulo de visión por computadora:** detección de objetos en tiempo real.
-
-- **Módulo de zona segura:** define y monitorea el área de vigilancia.
-
-- **Módulo de grabación de video:** activa grabación solo cuando se detecta actividad.
-
-- **Módulo de envío de logs:** transforma eventos a JSON y los expone por API.
-
-- **Módulo de sincronización de videos:** sube videos a un sistema de almacenamiento en la nube (AWS S3, Google Cloud Storage, etc.).
-
-- **Módulo de limpieza diaria:** borra logs y videos locales automáticamente (via cron o script en Python).
-
-En el componente de Edge Computing basado en Raspberry Pi se emplean dos estilos arquitectónicos principales:
-
-- **Microkernel (también conocido como Plug-in Architecture):** Este estilo se adopta para permitir la extensión y evolución modular del sistema, donde la funcionalidad básica de la Raspberry Pi se mantiene en el núcleo, y los módulos como visión por computadora, detección de zonas seguras, grabación de video y limpieza diaria actúan como plug-ins que interactúan con el núcleo a través de interfaces bien definidas.
-
-- **Cliente-Servidor:** Se utiliza en la interacción entre la Raspberry Pi y los sistemas externos (Backend y almacenamiento en la nube). La Raspberry Pi actúa como cliente al enviar datos mediante API RESTful a servicios en la nube como el Log API y al cargar archivos al almacenamiento de video (por ejemplo, AWS S3), mientras que los servicios remotos actúan como servidores.
+Esta estrategia facilita el despliegue incremental, la automatización, la resiliencia ante fallos parciales y la futura extensión del sistema con nuevos servicios (como seguimiento de objetos, análisis forense, etc.).
 
 
 ### Descripción de elementos arquitectónicos y relaciones
-Los elementos arquitectónicos definidos en la estructura C&C del componente Raspberry Pi incluyen:
 
-**Componentes (Elementos Activos):**
+A continuación se describen los principales elementos del sistema organizados como microservicios, y sus interacciones:
 
-- **Raspberry Pi (núcleo):** Nodo físico y lógico que centraliza la coordinación de los módulos. Ejecuta el software principal de detección y control.
-    
-- **Módulo de Visión por Computadora:** Utiliza TensorFlow Lite para detectar objetos de interés en tiempo real. Está directamente conectado al núcleo y emite eventos cuando identifica un objeto válido.
-    
-- **Módulo de Zona Segura:** Define coordenadas dentro del campo visual como área monitoreada. Evalúa si los objetos detectados entran en esta zona y activa alertas.
-    
-- **Módulo de Grabación de Video:** Se activa a partir de eventos generados por el módulo anterior. Administra el uso de la cámara y almacenamiento local temporal.
-    
-- **Módulo de Envío de Logs (Log API):** Convierte los eventos relevantes en mensajes JSON estructurados y los envía al Backend a través de una API REST.
-    
-- **Módulo de Sincronización de Videos (Sync API):** Sube automáticamente los archivos de video generados a un servicio de almacenamiento en la nube.
-    
-- **Módulo de Limpieza Diaria (Daily Cleanup):** Ejecutado con cron o script programado en Python, borra diariamente los archivos locales (videos y logs) para liberar espacio.
+Microservicios del Componente Raspberry Pi (Edge Node)
 
-**Conectores (Relaciones):**
+Servicio de detección de objetos (object-detector-ms):
+Microservicio local encargado de procesar el flujo de video en tiempo real con TensorFlow Lite, identificar objetos de interés y generar eventos.
 
-- Llamadas internas (invocación por interfaz): Entre el núcleo (Raspberry Pi) y los módulos de visión, zona segura, grabación, y limpieza. La comunicación se da mediante llamadas a funciones, eventos o señales internas.
-    
-- Conectores de red HTTP (REST API): El módulo Log API y el módulo Sync API utilizan protocolos HTTP para conectarse con el backend y la nube respectivamente. Esta conexión está asegurada bajo HTTPS.
-    
-- Canal de almacenamiento externo: El componente se conecta de forma asíncrona a un sistema de almacenamiento en la nube (Cloud Storage), usado como repositorio persistente de videos.
+Servicio de monitoreo de zona segura (safe-zone-ms):
+Evalúa si los objetos detectados entran en el área previamente definida como segura y genera alertas cuando se viola.
 
+Servicio de grabación (recorder-ms):
+Escucha eventos del servicio safe-zone-ms y graba video solo cuando es necesario, almacenándolo localmente.
+
+Servicio de envío de logs (log-dispatcher-ms):
+Envía eventos en formato JSON al backend a través de una API REST.
+
+Servicio de sincronización de videos (video-uploader-ms):
+Sube los videos al sistema de almacenamiento en la nube usando autenticación y claves seguras.
+
+Servicio de limpieza local (cleanup-ms):
+Ejecuta tareas programadas (cron) para eliminar archivos y logs antiguos.
+
+Microservicios del Backend (Cloud Node)
+
+Servicio de autenticación (auth-ms):
+Gestiona el login federado y emite tokens JWT que permiten el acceso controlado a los servicios protegidos.
+
+Servicio de ingestión de logs (log-ingestor-ms):
+Recibe los logs enviados desde múltiples Raspberry Pi y los almacena en la base de datos NoSQL (p. ej., MongoDB).
+
+Servicio de gestión de metadatos (metadata-ms):
+Maneja los datos estructurados asociados a usuarios, cámaras y videos. Utiliza una base de datos SQL (p. ej., PostgreSQL).
+
+Servicio de consulta de videos (video-access-ms):
+Genera URLs seguras (presigned) para permitir el acceso controlado a los archivos de video almacenados en la nube.
+
+Servicio de interfaz API Gateway (gateway-ms):
+Centraliza la entrada al sistema, validando tokens, redirigiendo las peticiones a los microservicios internos y agregando resultados.
+
+Microservicios del Frontend (Web Client)
+
+Servicio SPA de cliente (frontend-ui-ms):
+Microservicio ejecutado en el navegador, desarrollado como una Single Page Application (SPA). Consume las APIs del gateway, muestra dashboards y permite al usuario autenticado consultar logs y visualizar videos.
+
+Servicio de gestión de sesión (session-manager-ms):
+Localmente gestiona la validez del token JWT, expira sesiones y restringe el acceso según los permisos del usuario.
+
+Relaciones entre microservicios
+
+Comunicación sincrónica vía REST: Todos los microservicios se comunican a través de interfaces RESTful sobre HTTPS, con intercambio de datos en formato JSON.
+
+Autenticación y autorización: Todos los servicios protegidos verifican la validez del token JWT emitido por el auth-ms. Los permisos de acceso a logs o videos están vinculados al ID de usuario.
+
+Integración de datos: log-ingestor-ms y metadata-ms sincronizan los datos provenientes del Edge para generar un historial completo de actividad por usuario/cámara.
+
+Desacoplamiento total: El frontend no interactúa directamente con servicios internos del backend, sino a través del gateway-ms, lo que permite cambiar o actualizar servicios sin afectar al cliente.
+
+Escalabilidad horizontal: Cada microservicio puede ser escalado de forma independiente según la carga (por ejemplo, múltiples instancias de video-access-ms si hay alta demanda de reproducción de video).
+
+Esta arquitectura promueve un diseño distribuido robusto, en el cual cada elemento puede fallar o evolucionar sin comprometer el sistema global.
 ______________________________________________________________________________________________________________________________________________________________________________
 
 ## 1. Objective
