@@ -8,6 +8,10 @@ RUN npm ci
 
 COPY . .
 
+RUN chown -R node:node /src
+
+USER node
+
 FROM base AS dev
 
 EXPOSE 5174
