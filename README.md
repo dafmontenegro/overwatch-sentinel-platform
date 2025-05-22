@@ -162,13 +162,13 @@ Este modelo garantiza el cumplimiento de los principios de microservicios: escal
 
    6.3. Posicionarse en la carpeta *"...\overwatch-sentinel-platform-master\osp-raspberrypi-ms"*, y ejecutar las siguientes instrucciones.
 
-   6.4. docker build -t osp-raspberrypi-ms .
+      - docker build -t osp-raspberrypi-ms .
 
-   ![image](Imagen build osp-raspberrypi-ms)
+        ![image](Imagen build osp-raspberrypi-ms)
 
-   6.5. docker compose up -d
+      - docker compose up -d
 
-   ![image](Imagen compose up osp-raspberrypi-ms)
+        ![image](Imagen compose up osp-raspberrypi-ms)
 
    Se mostrará en pantalla la correcta creación de los Contenedores.
 
@@ -188,7 +188,7 @@ Este modelo garantiza el cumplimiento de los principios de microservicios: escal
 
    ![image](https://github.com/user-attachments/assets/1b15bf25-53a1-4cad-a505-581aba0e9774)
 
-8. Ir a la carpeta *"...\overwatch-sentinel-platform-master\test"* y ejecutar el archivo app.py.\
+8. Ir a la carpeta *"...\overwatch-sentinel-platform-master\osp-raspberrypi-ms"* y ejecutar el archivo app.py.\
    ![image](https://github.com/user-attachments/assets/97e707d2-76e0-4d6d-8b17-f73844f309cd)
 
    Este archivo fue diseñado para ejecutar una función similar a la que realiza la Rasberry Pi del proyecto, y se realizó con la finalidad de poder probar el software sin necesidad    de una Rasberry Pi.
