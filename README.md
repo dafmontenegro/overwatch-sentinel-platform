@@ -130,7 +130,7 @@ Este modelo garantiza el cumplimiento de los principios de microservicios: escal
 
 # Prototipo
 
-1. Descargar o clonar el repositorio alojado en [!LINK]
+1. Descargar o clonar el repositorio alojado en https://github.com/dafmontenegro/overwatch-sentinel-platform/tree/master
 2. Verificar que Docker se encuentre en ejecución, en caso de no estarlo este debe ser inicializado.
 
    ![image](https://github.com/user-attachments/assets/792afc9b-2f21-4c0d-984a-e0e95655e753)
