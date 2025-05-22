@@ -23,7 +23,7 @@ class ObjectDetector:
         return self.detector.detect(vision.TensorImage.create_from_array(rgb_image)).detections
 
 class Camera:
-    def __init__(self, frame_width=1280, frame_height=720, camera_number=0, fallback_video="sample.mp4"):
+    def __init__(self, frame_width=1280, frame_height=720, camera_number=0, fallback_video="test.mp4"):
         self.use_fallback = False
         self.video_capture = cv2.VideoCapture(camera_number)
 
@@ -31,15 +31,26 @@ class Camera:
             logging.warning("Unable to access camera. Falling back to sample video.")
             self.video_capture = cv2.VideoCapture(fallback_video)
             self.use_fallback = True
+            self.fallback_fps = self.video_capture.get(cv2.CAP_PROP_FPS)
+            if not self.fallback_fps or self.fallback_fps <= 1:
+                self.fallback_fps = 24
 
         self.video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, frame_width)
         self.video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, frame_height)
+        self.last_frame_time = time.time()
 
     def frame(self):
+        if self.use_fallback:
+            current_time = time.time()
+            elapsed = current_time - self.last_frame_time
+            delay = 1.0 / self.fallback_fps
+            if elapsed < delay:
+                time.sleep(delay - elapsed)
+            self.last_frame_time = time.time()
+
         success, frame = self.video_capture.read()
 
         if self.use_fallback and not success:
-            # Loop the fallback video
             self.video_capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
             success, frame = self.video_capture.read()
 
@@ -53,7 +64,7 @@ class Camera:
 
 class RealTimeObjectDetection:
     def __init__(self, frame_width=1280, frame_height=720, camera_number=0, model_name="efficientdet_lite0.tflite", num_threads=4, score_threshold=0.3, max_results=1, category_name_allowlist=["person"], 
-                 folder_name="events", storage_capacity=32, frequency=5000, duty_cycle=50, fps_frame_count= 30, safe_zone=((0, 0), (1280, 720))):
+                 folder_name="events", storage_capacity=32, fps_frame_count= 30, safe_zone=((0, 0), (1280, 720))):
         self.frame_width = frame_width
         self.frame_height = frame_height
         self.camera = Camera(frame_width, frame_height, camera_number)
@@ -99,7 +110,8 @@ class RealTimeObjectDetection:
     def save_frame_buffer(self, path, event_check_interval=10):
         output_seconds = int(len(self.frame_buffer)/self.fps)
         os.makedirs(os.path.dirname(path), exist_ok=True)
-        out = cv2.VideoWriter(path, cv2.VideoWriter_fourcc(*"avc1"), self.fps, (self.frame_width, self.frame_height))
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        out = cv2.VideoWriter(path, fourcc, self.fps, (self.frame_width, self.frame_height))
         logging.warning(f"EVENT: {output_seconds} seconds {path}")
         for frame in self.frame_buffer:
             out.write(frame)
@@ -201,22 +213,20 @@ if __name__ == "__main__":
             camera_number=0,
             model_name="efficientdet_lite0.tflite",
             num_threads=4,
-            score_threshold=0.5,
+            score_threshold=0.2,
             max_results=3, 
-            category_name_allowlist=["person", "dog", "cat", "umbrella"],
+            category_name_allowlist=["person", "dog"],
             folder_name=folder_name,
-            storage_capacity=32,
-            frequency=5000,
-            duty_cycle=50,
-            fps_frame_count=30,
-            safe_zone=((0, 180), (1280, 720))
+            storage_capacity=21,
+            fps_frame_count=24,
+            safe_zone=((960, 360), (1280, 720))
         )
 
         guard_thread = threading.Thread(target=remote_camera.guard, kwargs={
             "min_video_duration": 1,
-            "max_video_duration": 60,
-            "max_detection_delay": 10,
-            "event_check_interval": 10,
+            "max_video_duration": 9,
+            "max_detection_delay": 3,
+            "event_check_interval": 12,
             "safe_zone": True
         })
         guard_thread.start()
