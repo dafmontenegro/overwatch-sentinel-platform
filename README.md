@@ -149,9 +149,19 @@ Esta arquitectura promueve un diseño distribuido robusto, en el cual cada eleme
 
    ![image](https://github.com/user-attachments/assets/6f33f92d-45ea-46ef-bd66-199185315d2b)
 
+   6.3. Posicionarse en la carpeta *"...\overwatch-sentinel-platform-master\osp-raspberrypi-ms"*, y ejecutar las siguientes instrucciones.
+
+   6.4. docker build -t osp-raspberrypi-ms .
+
+   ![image](Imagen build osp-raspberrypi-ms)
+
+   6.5. docker compose up -d
+
+   ![image](Imagen compose up osp-raspberrypi-ms)
+
    Se mostrará en pantalla la correcta creación de los Contenedores.
 
-   ![image](https://github.com/user-attachments/assets/c8a5f356-307d-4d25-a08c-feb103cb696b) 
+   ![image](https://github.com/user-attachments/assets/c8a5f356-307d-4d25-a08c-feb103cb696b)
   
 7. Verificar la creación de los contenedores y de las imagenes en docker, y verificar que todos se encuentren ejecutando.
 
