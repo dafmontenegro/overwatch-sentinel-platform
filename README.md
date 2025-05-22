@@ -59,66 +59,75 @@ Esta estrategia facilita el despliegue incremental, la automatización, la resil
 
 ### Descripción de elementos arquitectónicos y relaciones
 
-A continuación se describen los principales elementos del sistema organizados como microservicios, y sus interacciones:
+La arquitectura del sistema OSP se compone de tres dominios principales —Frontend, Backend y Raspberry Pi (Edge)—, cada uno diseñado como una colección de microservicios independientes que se comunican mediante interfaces RESTful sobre HTTPS. A continuación se describen los elementos arquitectónicos y sus relaciones:
 
-Microservicios del Componente Raspberry Pi (Edge Node)
+**1. Microservicios en el Componente Raspberry Pi (Edge):** 
 
-Servicio de detección de objetos (object-detector-ms):
-Microservicio local encargado de procesar el flujo de video en tiempo real con TensorFlow Lite, identificar objetos de interés y generar eventos.
+- **osp-raspberrypi-ms:** Microservicio local que agrupa múltiples tareas en la Raspberry Pi, incluyendo la detección de objetos, evaluación de la zona segura, grabación de video y sincronización de datos. Expone una API REST mínima para enviar logs al backend.
 
-Servicio de monitoreo de zona segura (safe-zone-ms):
-Evalúa si los objetos detectados entran en el área previamente definida como segura y genera alertas cuando se viola.
+- **Relación:**
 
-Servicio de grabación (recorder-ms):
-Escucha eventos del servicio safe-zone-ms y graba video solo cuando es necesario, almacenándolo localmente.
+   - Envía eventos al backend (osp-backend-ms) mediante interfaces REST con mensajes JSON.
 
-Servicio de envío de logs (log-dispatcher-ms):
-Envía eventos en formato JSON al backend a través de una API REST.
+   - Sube los videos grabados a un almacenamiento en la nube externo (representado como nube externa en el modelo).
 
-Servicio de sincronización de videos (video-uploader-ms):
-Sube los videos al sistema de almacenamiento en la nube usando autenticación y claves seguras.
+**2. Microservicios en el Backend**
 
-Servicio de limpieza local (cleanup-ms):
-Ejecuta tareas programadas (cron) para eliminar archivos y logs antiguos.
+- **osp-backend-ms:** Microservicio central que recibe, valida y persiste los datos enviados por las Raspberry Pi. Internamente, realiza las siguientes funciones:
 
-Microservicios del Backend (Cloud Node)
+   - Gestión de autenticación federada (conexión a Google OAuth2).
 
-Servicio de autenticación (auth-ms):
-Gestiona el login federado y emite tokens JWT que permiten el acceso controlado a los servicios protegidos.
+   - Recepción y persistencia de logs desde los nodos Raspberry.
 
-Servicio de ingestión de logs (log-ingestor-ms):
-Recibe los logs enviados desde múltiples Raspberry Pi y los almacena en la base de datos NoSQL (p. ej., MongoDB).
+   - Generación de respuestas al frontend con datos y videos filtrados por usuario.
 
-Servicio de gestión de metadatos (metadata-ms):
-Maneja los datos estructurados asociados a usuarios, cámaras y videos. Utiliza una base de datos SQL (p. ej., PostgreSQL).
+- **Bases de Datos:**
 
-Servicio de consulta de videos (video-access-ms):
-Genera URLs seguras (presigned) para permitir el acceso controlado a los archivos de video almacenados en la nube.
+   - **PostgreSQL:** Almacena usuarios, permisos, metadatos de videos, y configuración del sistema.
 
-Servicio de interfaz API Gateway (gateway-ms):
-Centraliza la entrada al sistema, validando tokens, redirigiendo las peticiones a los microservicios internos y agregando resultados.
+   - **MongoDB:** Almacena los logs generados por los dispositivos en formato JSON.
 
-Microservicios del Frontend (Web Client)
+   - **auth_db:** Contiene tokens, sesiones y credenciales de acceso autenticadas.
 
-Servicio SPA de cliente (frontend-ui-ms):
-Microservicio ejecutado en el navegador, desarrollado como una Single Page Application (SPA). Consume las APIs del gateway, muestra dashboards y permite al usuario autenticado consultar logs y visualizar videos.
+   - **logs_db:** Esquema especializado para búsquedas de eventos históricos.
 
-Servicio de gestión de sesión (session-manager-ms):
-Localmente gestiona la validez del token JWT, expira sesiones y restringe el acceso según los permisos del usuario.
+-**Relación:**
 
-Relaciones entre microservicios
+   - Conecta bidireccionalmente con osp-raspberrypi-ms mediante API REST para recibir datos.
 
-Comunicación sincrónica vía REST: Todos los microservicios se comunican a través de interfaces RESTful sobre HTTPS, con intercambio de datos en formato JSON.
+   - Autentica usuarios con Google OAuth2.
 
-Autenticación y autorización: Todos los servicios protegidos verifican la validez del token JWT emitido por el auth-ms. Los permisos de acceso a logs o videos están vinculados al ID de usuario.
+   - Responde al frontend con los datos filtrados según token de usuario.
 
-Integración de datos: log-ingestor-ms y metadata-ms sincronizan los datos provenientes del Edge para generar un historial completo de actividad por usuario/cámara.
+**3. Microservicio en el Frontend**
 
-Desacoplamiento total: El frontend no interactúa directamente con servicios internos del backend, sino a través del gateway-ms, lo que permite cambiar o actualizar servicios sin afectar al cliente.
+osp-frontend-web: SPA (Single Page Application) ejecutada en navegador, desarrollada como microservicio independiente. Sus responsabilidades incluyen:
 
-Escalabilidad horizontal: Cada microservicio puede ser escalado de forma independiente según la carga (por ejemplo, múltiples instancias de video-access-ms si hay alta demanda de reproducción de video).
+Interfaz de login con autenticación federada (Google OAuth2).
 
-Esta arquitectura promueve un diseño distribuido robusto, en el cual cada elemento puede fallar o evolucionar sin comprometer el sistema global.
+Consulta segura de logs y videos asociados al usuario autenticado.
+
+Visualización estructurada de datos en el navegador.
+
+Relación:
+
+Se comunica con osp-backend-ms a través de API REST autenticadas con token.
+
+Consume los endpoints protegidos expuestos por el backend.
+
+Representa visualmente los datos y videos asociados al usuario.
+
+📡 Conectores y Relaciones
+
+Todos los microservicios se comunican a través de HTTP/HTTPS siguiendo el estilo RESTful.
+
+Se utilizan JWT (JSON Web Tokens) para validar autenticidad del usuario entre el frontend y backend.
+
+El backend actúa como gateway para proteger y filtrar el acceso a los datos almacenados.
+
+Las relaciones entre frontend y backend, así como entre backend y Raspberry, están representadas como conectores con roles bien definidos: productor, consumidor, autenticador o despachador.
+
+Este modelo garantiza el cumplimiento de los principios de microservicios: escalabilidad, independencia, despliegue individual, integración heterogénea (Python, JS, NoSQL/SQL) y separación de responsabilidades.
 
 
 # Prototipo
