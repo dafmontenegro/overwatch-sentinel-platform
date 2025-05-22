@@ -215,7 +215,7 @@ if __name__ == "__main__":
             camera_number=0,
             model_name="efficientdet_lite0.tflite",
             num_threads=multiprocessing.cpu_count(),
-            score_threshold=0.2,
+            score_threshold=0.3,
             max_results=3, 
             category_name_allowlist=["person", "dog"],
             folder_name=folder_name,
