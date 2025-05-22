@@ -184,7 +184,8 @@ Este modelo garantiza el cumplimiento de los principios de microservicios: escal
    
    ![image](https://github.com/user-attachments/assets/042eb701-b795-49d8-b25b-695d452e77c8)
 
-   ![image](https://github.com/user-attachments/assets/1b15bf25-53a1-4cad-a505-581aba0e9774)
+   ![Imagen de WhatsApp 2025-05-21 a las 23 43 18_2d6e476b](https://github.com/user-attachments/assets/1ecacf5f-e90b-4218-bf19-18b1177df859)
+
 
 8. Ir a la carpeta *"...\overwatch-sentinel-platform-master\osp-raspberrypi-ms"* y ejecutar el archivo app.py.\
    ![image](https://github.com/user-attachments/assets/97e707d2-76e0-4d6d-8b17-f73844f309cd)
@@ -230,6 +231,3 @@ Este modelo garantiza el cumplimiento de los principios de microservicios: escal
     10.5. La transmisión puede ser pausada y reanudada pulsando sobre el ícono de play/pause.\
           ![image](https://github.com/user-attachments/assets/6be22fb6-077e-40d7-b787-6edec11578c0)\
           ![image](https://github.com/user-attachments/assets/28ef443c-c273-44b0-a4c8-8df522c9c34c)
-
-    10.6. El video puede ser visto en pantalla completa, para ello se puede pulsa en el icono de la parte inferior derecha de la imágen.
-          ![Pendiente Imagen]
