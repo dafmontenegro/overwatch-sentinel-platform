@@ -1,0 +1,9 @@
+rsync -avz --delete ./ osp@overwatch-sentinel-platform.local:/home/osp/osp-raspberrypi-ms/
+
+sudo docker compose build
+
+sudo docker compose up -d
+
+sudo docker compose logs -f
+
+overwatch-sentinel-platform.local:8080

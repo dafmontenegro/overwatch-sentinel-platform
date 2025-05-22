@@ -5,6 +5,7 @@ import shutil
 import logging
 import argparse
 import threading
+import multiprocessing
 from tflite_support.task import core
 from tflite_support.task import vision
 from tflite_support.task import processor
@@ -91,7 +92,7 @@ class RealTimeObjectDetection:
                     if not self.frame_buffer:
                         self.output["file_name"] = time.strftime("%B%d_%Hhr_%Mmin%Ssec", time_localtime)
                         self.output["day"], self.output["hours"], self.output["mins"] = self.output["file_name"].split("_")
-                        self.output["path"] = os.path.join(self.folder_name, self.output["day"], self.output["hours"], f"{self.output['file_name']}.mp4")
+                        self.output["path"] = os.path.join(self.folder_name, self.output["day"], self.output["hours"], f"{self.output['file_name']}.avi")
                     self.last_detection_timestamp = time.time()
                     self.frame_buffer.append(self.frame)
                 else:
@@ -111,7 +112,7 @@ class RealTimeObjectDetection:
     def save_frame_buffer(self, path, event_check_interval=10):
         output_seconds = int(len(self.frame_buffer)/self.fps)
         os.makedirs(os.path.dirname(path), exist_ok=True)
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        fourcc = cv2.VideoWriter_fourcc(*"XVID")
         out = cv2.VideoWriter(path, fourcc, self.fps, (self.frame_width, self.frame_height))
         logging.warning(f"EVENT: {output_seconds} seconds {path}")
         for frame in self.frame_buffer:
@@ -198,13 +199,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
     try:
         log_file = args.log_file
-        if args.reset_logs:
-            with open(log_file, "w") as file:
-                file.write(f"{log_file.upper()}\n")
+        with open(log_file, "w") as file:
+            file.write(f"{log_file.upper()}\n")
         logging.basicConfig(filename=log_file, level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s", datefmt="%B%d/%Y %H:%M:%S")
 
         folder_name = args.folder_name
-        if args.reset_events:
+        if os.path.exists(folder_name):
             StorageManager.delete_folder(folder_name)
         os.makedirs("events", exist_ok=True)
 
@@ -213,7 +213,7 @@ if __name__ == "__main__":
             frame_height=720,
             camera_number=0,
             model_name="efficientdet_lite0.tflite",
-            num_threads=4,
+            num_threads=multiprocessing.cpu_count(),
             score_threshold=0.2,
             max_results=3, 
             category_name_allowlist=["person", "dog"],
@@ -235,7 +235,7 @@ if __name__ == "__main__":
         app = Flask(__name__)
         CORS(app)
 
-        def real_time_transmission(duration=120):
+        def real_time_transmission(duration=300):
             start_time = time.time()
             time_seconds = int(time.time())
             while time_seconds - start_time < duration:
@@ -266,7 +266,7 @@ if __name__ == "__main__":
                     hour_path = os.path.join(day_path, hour)
                     hour_info  = {"time": hour, "videos": []}
                     for video in sorted(os.listdir(hour_path)):
-                        video_name = "".join(video.split("_")[1:]).replace(".mp4", "")
+                        video_name = "".join(video.split("_")[1:]).replace(".avi", "")
                         hour_info["videos"].append({"name": video_name, "path": video})
                     day_info["hours"].append(hour_info )
                 days.append(day_info)
@@ -278,7 +278,7 @@ if __name__ == "__main__":
         def get_video(video_path):
             video_path = os.path.join(folder_name, video_path)
             if os.path.exists(video_path):
-                return send_file(video_path, mimetype="video/mp4")
+                return send_file(video_path, mimetype="video/x-msvideo")
             else:
                 return "Video not found."
 
