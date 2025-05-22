@@ -88,22 +88,22 @@ class RealTimeObjectDetection:
         try:
             while self.isOpened():
                 security_breach, time_localtime = self.process_frame((0, 0, 255), 1, 2, cv2.FONT_HERSHEY_SIMPLEX, safe_zone)
-                if security_breach:
-                    if not self.frame_buffer:
-                        self.output["file_name"] = time.strftime("%B%d_%Hhr_%Mmin%Ssec", time_localtime)
-                        self.output["day"], self.output["hours"], self.output["mins"] = self.output["file_name"].split("_")
-                        self.output["path"] = os.path.join(self.folder_name, self.output["day"], self.output["hours"], f"{self.output['file_name']}.avi")
-                    self.last_detection_timestamp = time.time()
-                    self.frame_buffer.append(self.frame)
-                else:
-                    if self.last_detection_timestamp and ((time.time() - self.last_detection_timestamp) >= max_detection_delay):
-                        if len(self.frame_buffer) >= self.fps*min_video_duration:
-                            self.save_frame_buffer(self.output["path"], event_check_interval)
-                        self.last_detection_timestamp = None
-                        self.frame_buffer = []
-                        self.output = {}
-                    elif len(self.frame_buffer) >= self.fps*max_video_duration:
-                        self.save_frame_buffer(self.output["path"], event_check_interval)
+                # if security_breach:
+                #     if not self.frame_buffer:
+                #         self.output["file_name"] = time.strftime("%B%d_%Hhr_%Mmin%Ssec", time_localtime)
+                #         self.output["day"], self.output["hours"], self.output["mins"] = self.output["file_name"].split("_")
+                #         self.output["path"] = os.path.join(self.folder_name, self.output["day"], self.output["hours"], f"{self.output['file_name']}.avi")
+                #     self.last_detection_timestamp = time.time()
+                #     self.frame_buffer.append(self.frame)
+                # else:
+                #     if self.last_detection_timestamp and ((time.time() - self.last_detection_timestamp) >= max_detection_delay):
+                #         if len(self.frame_buffer) >= self.fps*min_video_duration:
+                #             self.save_frame_buffer(self.output["path"], event_check_interval)
+                #         self.last_detection_timestamp = None
+                #         self.frame_buffer = []
+                #         self.output = {}
+                #     elif len(self.frame_buffer) >= self.fps*max_video_duration:
+                #         self.save_frame_buffer(self.output["path"], event_check_interval)
         except Exception as e:
             logging.error(e, exc_info=True)
             self.close()
@@ -154,6 +154,7 @@ class RealTimeObjectDetection:
             average_frame_time = sum(self.frame_times) / len(self.frame_times)
             self.fps = round(1/average_frame_time, 2)
             self.frame_times = []
+        cv2.putText(frame, f"FPS: {self.fps}", (self.frame_width - 120, self.frame_height - 12), font, font_size, color, font_thickness)
         return security_breach, time_localtime
 
     def isOpened(self):
