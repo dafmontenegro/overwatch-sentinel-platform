@@ -213,13 +213,13 @@ if __name__ == "__main__":
             camera_number=0,
             model_name="efficientdet_lite0.tflite",
             num_threads=4,
-            score_threshold=0.2,
+            score_threshold=0.1,
             max_results=3, 
             category_name_allowlist=["person", "dog"],
             folder_name=folder_name,
             storage_capacity=21,
             fps_frame_count=24,
-            safe_zone=((960, 360), (1280, 720))
+            safe_zone=((880, 360), (1280, 720))
         )
 
         guard_thread = threading.Thread(target=remote_camera.guard, kwargs={
@@ -233,7 +233,7 @@ if __name__ == "__main__":
 
         app = Flask(__name__)
 
-        def real_time_transmission(duration=300):
+        def real_time_transmission(duration=120):
             start_time = time.time()
             time_seconds = int(time.time())
             while time_seconds - start_time < duration:

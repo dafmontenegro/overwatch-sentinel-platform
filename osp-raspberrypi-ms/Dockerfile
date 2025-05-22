@@ -5,9 +5,6 @@ RUN apt-get update && apt-get install -y \
     curl libglib2.0-0 libsm6 libxext6 libxrender-dev libgl1-mesa-glx libstdc++6 libusb-1.0-0 tzdata \
     && rm -rf /var/lib/apt/lists/*
 
-# Set timezone environment variable
-ENV TZ=America/Bogota
-
 # Configure timezone data
 RUN ln -fs /usr/share/zoneinfo/$TZ /etc/localtime && dpkg-reconfigure -f noninteractive tzdata
 
@@ -17,6 +14,7 @@ WORKDIR /app
 COPY requirements.txt .
 COPY pi_tensorflow_lite_object_detection.py .
 COPY test.mp4 .
+COPY templates/ ./templates/
 
 # Upgrade pip and install Python dependencies
 RUN pip install --upgrade pip
