@@ -154,7 +154,7 @@ class RealTimeObjectDetection:
             average_frame_time = sum(self.frame_times) / len(self.frame_times)
             self.fps = round(1/average_frame_time, 2)
             self.frame_times = []
-        cv2.putText(frame, f"FPS: {self.fps}", (self.frame_width - 120, self.frame_height - 12), font, font_size, color, font_thickness)
+        cv2.putText(frame, f"FPS: {self.fps}", (self.frame_width - 180, self.frame_height - 18), font, font_size, color, font_thickness)
         return security_breach, time_localtime
 
     def isOpened(self):
