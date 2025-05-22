@@ -225,8 +225,8 @@ Este modelo garantiza el cumplimiento de los principios de microservicios: escal
           ![image](https://github.com/user-attachments/assets/a32873fb-9005-44ed-b220-e4d8a591682f)
           ![image](https://github.com/user-attachments/assets/ea32eb4c-420b-48f3-8c34-f84697bfc9a0)
 
-    10.4. Se puede apreciar la transmisión de video en vivo.
-          ![Sin título](https://github.com/user-attachments/assets/b984e195-7e86-4cda-83a0-e4f161f66c3b)
+    10.4. Se puede apreciar la transmisión de video.
+          ![Imagen de WhatsApp 2025-05-21 a las 23 44 08_42ca8c0c](https://github.com/user-attachments/assets/2d8a36ac-e1fc-49b4-a8f0-19a74d5c5e3d)
 
     10.5. La transmisión puede ser pausada y reanudada pulsando sobre el ícono de play/pause.\
           ![image](https://github.com/user-attachments/assets/6be22fb6-077e-40d7-b787-6edec11578c0)\
