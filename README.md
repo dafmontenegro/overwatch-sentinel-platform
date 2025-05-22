@@ -91,7 +91,7 @@ La arquitectura del sistema OSP se compone de tres dominios principales —Front
 
    - **logs_db:** Esquema especializado para búsquedas de eventos históricos.
 
--**Relación:**
+- **Relación:**
 
    - Conecta bidireccionalmente con osp-raspberrypi-ms mediante API REST para recibir datos.
 
@@ -101,31 +101,31 @@ La arquitectura del sistema OSP se compone de tres dominios principales —Front
 
 **3. Microservicio en el Frontend**
 
-osp-frontend-web: SPA (Single Page Application) ejecutada en navegador, desarrollada como microservicio independiente. Sus responsabilidades incluyen:
+- osp-frontend-web: SPA (Single Page Application) ejecutada en navegador, desarrollada como microservicio independiente. Sus responsabilidades incluyen:
 
-Interfaz de login con autenticación federada (Google OAuth2).
+   - Interfaz de login con autenticación federada (Google OAuth2).
 
-Consulta segura de logs y videos asociados al usuario autenticado.
+   - Consulta segura de logs y videos asociados al usuario autenticado.
 
-Visualización estructurada de datos en el navegador.
+   - Visualización estructurada de datos en el navegador.
 
-Relación:
+- **Relación:**
 
-Se comunica con osp-backend-ms a través de API REST autenticadas con token.
+   - Se comunica con osp-backend-ms a través de API REST autenticadas con token.
 
-Consume los endpoints protegidos expuestos por el backend.
+   - Consume los endpoints protegidos expuestos por el backend.
 
-Representa visualmente los datos y videos asociados al usuario.
+   - Representa visualmente los datos y videos asociados al usuario.
 
-📡 Conectores y Relaciones
+**Conectores y Relaciones**
 
-Todos los microservicios se comunican a través de HTTP/HTTPS siguiendo el estilo RESTful.
+- Todos los microservicios se comunican a través de HTTP/HTTPS siguiendo el estilo RESTful.
 
-Se utilizan JWT (JSON Web Tokens) para validar autenticidad del usuario entre el frontend y backend.
+- Se utilizan JWT (JSON Web Tokens) para validar autenticidad del usuario entre el frontend y backend.
 
-El backend actúa como gateway para proteger y filtrar el acceso a los datos almacenados.
+- El backend actúa como gateway para proteger y filtrar el acceso a los datos almacenados.
 
-Las relaciones entre frontend y backend, así como entre backend y Raspberry, están representadas como conectores con roles bien definidos: productor, consumidor, autenticador o despachador.
+- Las relaciones entre frontend y backend, así como entre backend y Raspberry, están representadas como conectores con roles bien definidos: productor, consumidor, autenticador o despachador.
 
 Este modelo garantiza el cumplimiento de los principios de microservicios: escalabilidad, independencia, despliegue individual, integración heterogénea (Python, JS, NoSQL/SQL) y separación de responsabilidades.
 
