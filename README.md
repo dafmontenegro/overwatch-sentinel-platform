@@ -34,6 +34,10 @@ Esta solución está orientada a escenarios donde se requiere supervisión efici
 
 ## Estructura Componente y Conector (C&C)
 ### C&C View
+
+![CyC drawio](https://github.com/user-attachments/assets/1a7a53ca-c2a2-4e49-b266-8eecea4c1be2)
+
+
 ### Descripción de los estilos arquitectónicos utilizados
 
 El sistema OSP (Overwatch Sentinel Platform) adopta de forma integral el estilo arquitectónico basado en microservicios, aplicado coherentemente desde el procesamiento local en dispositivos Raspberry Pi hasta los servicios del backend y la interfaz web del frontend.
