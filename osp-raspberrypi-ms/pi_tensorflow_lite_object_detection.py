@@ -9,6 +9,7 @@ from tflite_support.task import core
 from tflite_support.task import vision
 from tflite_support.task import processor
 from flask import Flask, Response, render_template, send_file
+from flask_cors import CORS
 
 
 class ObjectDetector:
@@ -232,6 +233,7 @@ if __name__ == "__main__":
         guard_thread.start()
 
         app = Flask(__name__)
+        CORS(app)
 
         def real_time_transmission(duration=120):
             start_time = time.time()

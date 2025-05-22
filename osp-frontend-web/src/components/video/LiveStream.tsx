@@ -60,8 +60,8 @@ const LiveStream: React.FC<Stream> = ({ cameraId }) => {
   }
 
   return (
-    <div className='flex justify-center items-center min-h-[78vh]'>
-      <div className="relative bg-black rounded-lg max-w-[105vh] max-h-[79vh] aspect-[4/3] w-full h-full">
+    <div className="flex justify-center items-center w-full h-full">
+      <div className="relative bg-black aspect-video">
         <VideoPlayer 
           streamUrl={streamUrl} 
           isPlaying={isPlaying}

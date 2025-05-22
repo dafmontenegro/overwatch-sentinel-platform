@@ -1,7 +1,8 @@
 services:
-  web-backend:
+  osp-backend-ms:
     build:
-      context: ./Compact_backend
+      context: ./osp-backend-ms
+    image: osp-backend-ms:dev
     ports:
       - "8000:8000"
     env_file:
@@ -29,12 +30,11 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
     command: postgres -c listen_addresses='*'
 
-  web-frontend:
+  osp-frontend-web:
     build:
-      context: ./osp-frontend
+      context: ./osp-frontend-web
       target: dev
-    image: osp-frontend:dev
-    container_name: osp-frontend-dev
+    image: osp-frontend-web:dev
     volumes:
       - .:/app
       - /app/node_modules

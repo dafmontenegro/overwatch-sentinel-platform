@@ -63,12 +63,16 @@ const LiveVideoPage: React.FC = () => {
                 ))}
               </select>
             </div>
-
+            
             {selectedCamera ? (
               <LiveStream cameraId={selectedCamera} id={''} name={''} url={''} status={'error'} />
             ) : (
-              <div className="text-center py-12 bg-gray-50 rounded-lg">
-                <p className="text-gray-500">Selecciona una cámara para ver la transmisión en vivo</p>
+              <div className="flex-1 flex justify-center items-center">
+                <div className="w-full max-w-screen-xl flex items-center justify-center bg-black aspect-video">
+                  <p className="text-gray-400 text-center px-4">
+                    Selecciona una cámara para ver la transmisión en vivo
+                  </p>
+                </div>
               </div>
             )}
           </>
