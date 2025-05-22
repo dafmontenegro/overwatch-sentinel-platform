@@ -136,15 +136,13 @@ Este modelo garantiza el cumplimiento de los principios de microservicios: escal
    ![image](https://github.com/user-attachments/assets/792afc9b-2f21-4c0d-984a-e0e95655e753)
 
 3. Descargar los dos (2) archivos ".env" proporcionados vía (pendiente slack o acceso a drive)
-4. Colocar el archivo *.env* correspondiente al backend en las rutas *"...\overwatch-sentinel-platform-master\Compact_backend"* y *"...\overwatch-sentinel-platform-master"*.
+4. Colocar el archivo *.env* correspondiente al backend en las rutas *"...\overwatch-sentinel-platform-master\osp-backend-ms"* y *"...\overwatch-sentinel-platform-master"*.
 
-   ![image](https://github.com/user-attachments/assets/1a096ccc-a076-462e-89a3-784cca5f8140)
-
+   ![Imagen de WhatsApp 2025-05-21 a las 23 38 14_5d12f444](https://github.com/user-attachments/assets/56a49d68-8820-4da3-b675-80e15aa953ab)
    
-5. Colocar el archivo *.env* correspondiente al frontend en la ruta *"...\overwatch-sentinel-platform-master\osp-frontend"*
+5. Colocar el archivo *.env* correspondiente al frontend en la ruta *"...\overwatch-sentinel-platform-master\osp-frontend-web"*
 
-   ![image](https://github.com/user-attachments/assets/f6230491-f24c-4b50-8952-4d01bea73894)
-
+   ![Imagen de WhatsApp 2025-05-21 a las 23 37 24_46379484](https://github.com/user-attachments/assets/a5078d50-e63f-4601-9744-86fd7760d685)
    
 6. Posicionarse en la carpeta raiz *"...\overwatch-sentinel-platform-master"*, abrir una terminal y ejecutar las siguientes instrucciones.
    
