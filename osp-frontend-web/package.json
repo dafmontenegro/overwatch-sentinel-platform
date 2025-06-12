@@ -4,16 +4,18 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "dev": "tsx src/server.ts",
+    "build": "vite build && vite build --ssr src/entry-server.tsx",
+    "preview": "node dist/server.js",
+    "clean": "rm -rf dist && rm -rf node_modules package-lock.json && npm install",
+    "lint": "eslint . --ext .ts,.tsx"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.7",
     "axios": "^1.9.0",
     "cookie": "^0.7.2",
     "dotenv": "^16.5.0",
+    "express": "^5.1.0",
     "hls.js": "^1.6.2",
     "osp-frontend": "file:",
     "react": "^19.1.0",
@@ -24,6 +26,7 @@
     "@eslint/js": "^9.25.0",
     "@rollup/plugin-commonjs": "^28.0.3",
     "@types/axios": "^0.9.36",
+    "@types/express": "^5.0.3",
     "@types/hls.js": "^0.13.3",
     "@types/node": "^22.15.19",
     "@types/react": "^19.1.2",
@@ -37,6 +40,7 @@
     "globals": "^16.0.0",
     "postcss": "^8.5.3",
     "tailwindcss": "^3.4.3",
+    "tsx": "^4.20.2",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.30.1",
     "vite": "^6.3.5"
