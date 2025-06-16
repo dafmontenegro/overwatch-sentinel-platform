@@ -127,6 +127,22 @@ La arquitectura del sistema OSP se compone de tres dominios principales —Front
 
 Este modelo garantiza el cumplimiento de los principios de microservicios: escalabilidad, independencia, despliegue individual, integración heterogénea (Python, JS, NoSQL/SQL) y separación de responsabilidades.
 
+## Layered Structure
+ ![Layered structure](https://github.com/user-attachments/assets/ce1152d4-e67b-43ed-82df-5333a37f14f5)
+
+### Descripción de elementos arquitectónicos y relaciones
+El sistema OSP maneja 3 layers en este caso: 
+   - Una capa de presentación que tiene elementos separados para mostrar el acceso a la cuenta del usuario, la transmision en vivo, los videos guardados y los logs generados.
+   - Una capa de lógica donde se realiza el proceso de autenticación de cuentas, se maneja el livestream generado por el componente físico y se procesan los videos y logs.
+   - Una capa de datos que maneja bases de datos para la información de autenticación, los videos, los logs y la transmisión en vivo.
+
+- **Relaciones:**
+   - La página de acceso requiere del proceso de autenticación para llevar al usuario a su cuenta o mostrar un error, este proceso se realiza validando la información presente en la base de datos de autenticación.
+   - La página de transmisiones en vivo muestra la captura del componente físico siendo procesada por el sistema y recogiendo la información desde una base de datos separada.
+   - La página de videos muestra un catalogo de videos guardados asociados al usuario, el componente lógico se encarga de tomar la información para generar, procesar y guardar en su propia base de datos este contenido.
+   - La página de logs muestra los informes generados al ser producidos y procesados los videos, estos son recuperados de su base de datos para poder ser revisados por el usuario en un formato conveniente.
+
+
 
 # Prototipo
 
@@ -147,6 +163,7 @@ Este modelo garantiza el cumplimiento de los principios de microservicios: escal
 6. Posicionarse en la carpeta raiz *"...\overwatch-sentinel-platform-master"*, abrir una terminal y ejecutar las siguientes instrucciones.
    
    6.1. docker-compose build --no-cache
+![2dbfc5d1-6539-4b55-9403-359d9405f685](https://github.com/user-attachments/assets/af474df0-aace-4dd2-abda-e5ec244d2ea2)
 
    ![image](https://github.com/user-attachments/assets/3f6230bb-48da-4452-91eb-046e9cd028c1)
 
