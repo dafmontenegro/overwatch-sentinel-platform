@@ -5,18 +5,16 @@ import Hero from '../components/home/Hero';
 import AboutUs from '../components/home/AboutUs';
 import Features from '../components/home/Features';
 import ContactSection from '../components/home/ContactSection';
-import useAuth from '../hooks/useAuth';
+import { useAuth } from '../hooks/useAuth';
+import FederatedLogin from '../components/auth/FederatedLogin';
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
-  const { loginWithProvider } = useAuth();
+  const { isAuthenticated, loginWithProvider } = useAuth();
 
-  const handleDirectAccess = async () => {
-    try {
-      await loginWithProvider('direct');
+  const handleAccess = async () => {
+    if (isAuthenticated) {
       navigate('/live');
-    } catch (error) {
-      console.error('Error al iniciar sesión:', error);
     }
   };
 
@@ -26,8 +24,14 @@ const HomePage: React.FC = () => {
         title="OSP - Overwatch Sentinel Platform" 
         subtitle="Vigilancia inteligente basada en visión por computadora" 
         ctaText="Acceder al Sistema" 
-        onCtaClick={handleDirectAccess} 
+        onCtaClick={handleAccess} 
       />
+      {/* Si no está autenticado, muestra el login federado */}
+      {!isAuthenticated && (
+        <div className="flex justify-center my-8">
+          <FederatedLogin />
+        </div>
+      )}
       <AboutUs />
       <Features />
       <ContactSection />

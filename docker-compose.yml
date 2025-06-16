@@ -30,18 +30,16 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
     command: postgres -c listen_addresses='*'
 
-  osp-frontend-web:
-    build:
-      context: ./osp-frontend-web
-      target: dev
-    image: osp-frontend-web:dev
-    volumes:
-      - .:/app
-      - /app/node_modules
-    ports:
-      - "5173:5173"
-    environment:
-      - CHOKIDAR_USEPOLLING=true
+  # osp-frontend-web:
+  #   build:
+  #     context: ./osp-frontend-web
+  #   image: osp-frontend-web:dev
+  #   ports:
+  #     - "5173:5173"
+  #   environment:
+  #     - NODE_ENV=production
+  #   depends_on:
+  #     - osp-backend-ms
 
 volumes:
   postgres_data:

@@ -2,10 +2,11 @@
 import os
 import logging
 from datetime import datetime
+from dotenv import load_dotenv
 
 # Third-party Imports
 from fastapi import FastAPI, Depends, HTTPException
-from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.responses import StreamingResponse, JSONResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.requests import Request
@@ -72,12 +73,18 @@ app.add_middleware(
     secret_key=SECRET_KEY,
 )
 
+load_dotenv()  # Load environment variables from .env file
+
 ### Raspberry Pi connection endpoints ###
 # Environment variables for device endpoints
 VIDEO_STREAM_URL = os.getenv("VIDEO_STREAM_URL")  # URL for live video streaming
 LOGS_URL = os.getenv("LOGS_URL")                  # URL to fetch raw logs from device
 EVENTS_URL = os.getenv("EVENTS_URL")              # URL for event notifications
 PLAY_URL = os.getenv("PLAY_URL")                  # Base URL for video playback
+
+# URL for frontend application
+FRONTEND_URL = os.getenv("FRONTEND_URL")
+print(f"Frontend URL: {FRONTEND_URL}")
 
 ### MongoDB Connection Setup ###
 # Configure MongoDB client using cluster URI from environment variables
@@ -204,7 +211,9 @@ async def auth_google_callback(request: Request, db: AsyncSession = Depends(get_
 
         # Generate JWT for API access
         access_token = create_access_token(data={"sub": str(user.id)})
-        return {"access_token": access_token, "token_type": "bearer"}
+        print(f"{FRONTEND_URL} Generated access token: {access_token}")
+        return RedirectResponse(f"{FRONTEND_URL}/login/callback?token={access_token}")
+        #return {"access_token": access_token, "token_type": "bearer"}
 
     except Exception as e:
         logging.error(f"Critical error: {str(e)}", exc_info=True)

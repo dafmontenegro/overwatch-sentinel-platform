@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import NavItem from './NavItem';
-import useAuth from '../../hooks/useAuth';
+import { useAuth } from '../../hooks/useAuth';
 import Logo from '../../assets/Logo.svg';
 
 const Navbar: React.FC = () => {
@@ -20,10 +20,8 @@ const Navbar: React.FC = () => {
 
   const handleDirectLogin = async () => {
     try {
-      // Simulamos un inicio de sesión automático
-      await loginWithProvider('direct');
-      // Redirigimos al dashboard
-      navigate('/');
+      await loginWithProvider('google');
+      navigate('/live');
     } catch (error) {
       console.error('Error al iniciar sesión:', error);
     }
