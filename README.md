@@ -33,7 +33,8 @@ Esta solución está orientada a escenarios donde se requiere supervisión efici
 ## Estructura Componente y Conector (C&C)
 ### C&C View
 
-![CyC drawio](https://github.com/user-attachments/assets/1a7a53ca-c2a2-4e49-b266-8eecea4c1be2)
+![Component-and Connector2 drawio](https://github.com/user-attachments/assets/30f96c98-6581-4946-b477-0eb5e7c6007b)
+
 
 
 ### Descripción de los estilos arquitectónicos utilizados
@@ -141,9 +142,9 @@ El sistema OSP maneja 3 layers en este caso:
    - Una capa de lógica donde se realiza el proceso de autenticación de cuentas, se maneja el livestream generado por el componente físico y se procesan los videos y logs.
      
    - Una capa de datos que maneja bases de datos para la información de autenticación, los videos, los logs y la transmisión en vivo.
-     
 
-- **Relaciones:**
+  **Relaciones:**
+  
    - La página de acceso requiere del proceso de autenticación para llevar al usuario a su cuenta o mostrar un error, este proceso se realiza validando la información presente en la base de datos de autenticación.
      
    - La página de transmisiones en vivo muestra la captura del componente físico siendo procesada por el sistema y recogiendo la información desde una base de datos separada.
@@ -167,7 +168,8 @@ Para ser desplegado el sistema OSP tiene en consideración tres tipos de compone
 
    - El dispositivo de captura
      
-- **Relaciones:**
+  **Relaciones:**
+
    -El dispositivo de captura se encuentra compuesto por cualquier cantidad de raspberrypies presentes en el hogar del usuario para cubrir las locaciones requeridas que se manejan desde un punto LAN antes de conectarse al servidor central como una entidad.
 
   - El dispositivo del usuario puede ser cualquier tecnología desde la cual se acceda al sistema mediante una conexion a la red del servidor central.
