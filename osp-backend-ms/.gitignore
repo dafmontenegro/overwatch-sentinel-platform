@@ -3,3 +3,13 @@ __pycache__/
 *.pyc
 venv/
 config.env
+.env.*
+*.sqlite3
+*.db
+*.log
+*.pid
+.vscode/
+.idea/
+*.egg-info/
+dist/
+build/

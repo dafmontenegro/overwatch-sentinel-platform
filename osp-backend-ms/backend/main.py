@@ -13,16 +13,19 @@ from starlette.config import Config
 from authlib.integrations.starlette_client import OAuth
 from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, text
 import httpx
 from apscheduler.schedulers.background import BackgroundScheduler
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
+import asyncio
+from sqlalchemy.exc import OperationalError
 
 # Relative Imports 
-from .database import SessionLocal, create_tables, get_db
+from .database import SessionLocal, create_tables, get_db, engine
 from .models import User
 from .auth import create_access_token, get_current_user
+from .config import SECRET_KEY, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET
 
 """
     Author: Cristian Beltran
@@ -45,6 +48,7 @@ from .auth import create_access_token, get_current_user
 """
 
 # Configure logging system
+logger = logging.getLogger(__name__)
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
@@ -65,7 +69,7 @@ app.add_middleware(
 app.add_middleware(
     SessionMiddleware,
     # secret_key=os.getenv("SECRET_KEY", "default_super_secret_key")
-    secret_key="your_super_secret",  # Must match SECRET_KEY in configuration
+    secret_key=SECRET_KEY,
 )
 
 ### Raspberry Pi connection endpoints ###
@@ -100,7 +104,30 @@ async def proxy_video_stream():
 # Execute during application startup
 @app.on_event("startup")
 async def startup():
-    await create_tables()  # Async table creation
+    logger.info("Starting database initialization...")
+    
+    # Verifica si las tablas ya existen
+    try:
+        async with engine.connect() as conn:
+            result = await conn.execute(text("SELECT users FROM information_schema.tables WHERE table_schema='public'"))
+            tables = result.scalars().all()
+            logger.info(f"Existing tables: {tables}")
+    except Exception as e:
+        logger.error(f"Error checking existing tables: {str(e)}")
+
+    max_retries = 5
+    for attempt in range(max_retries):
+        try:
+            await create_tables()
+            logger.info("Database tables created successfully")
+            break
+        except OperationalError as e:
+            logger.warning(f"Database connection failed (attempt {attempt+1}/{max_retries}): {e}")
+            if attempt < max_retries - 1:
+                await asyncio.sleep(2 ** attempt)  # Espera exponencial
+            else:
+                logger.error("Failed to connect to database after multiple attempts")
+                raise
 
 # OAuth configuration
 config = Config('.env')
@@ -146,19 +173,34 @@ async def auth_google_callback(request: Request, db: AsyncSession = Depends(get_
             raise HTTPException(status_code=400, detail="Failed to retrieve userinfo")
 
         # Database query for existing user
-        result = await db.execute(select(User).where(User.provider_id == user_info["sub"]))
+        result = await db.execute(
+            select(User).where(
+                (User.provider_id == user_info["sub"]) | (User.email == user_info["email"])
+            )
+        )
         user = result.scalar_one_or_none()
+
+        name = user_info.get("name", "")
+        picture = user_info.get("picture", "")
 
         # Create new user if not exists
         if not user:
             user = User(
                 provider="google",
                 provider_id=user_info["sub"],
-                email=user_info["email"]
+                email=user_info["email"],
+                name=name,
+                picture=picture
             )
             db.add(user)
-            await db.commit()
-            await db.refresh(user)
+        else:
+            if name:
+                user.name = name
+            if picture:
+                user.picture = picture
+
+        await db.commit()
+        await db.refresh(user)
 
         # Generate JWT for API access
         access_token = create_access_token(data={"sub": str(user.id)})
@@ -170,6 +212,84 @@ async def auth_google_callback(request: Request, db: AsyncSession = Depends(get_
     
     finally:
         await db.close()
+
+# Register GitHub provider
+github = oauth.register(
+    name="github",
+    client_id=GITHUB_CLIENT_ID,
+    client_secret=GITHUB_CLIENT_SECRET,
+    access_token_url="https://github.com/login/oauth/access_token",
+    authorize_url="https://github.com/login/oauth/authorize",
+    api_base_url="https://api.github.com/",
+    client_kwargs={"scope": "user:email"},
+)
+
+# GitHub authentication endpoint
+@app.get("/auth/github")
+async def login_github(request: Request):
+    """Initiates GitHub OAuth2 flow"""
+    redirect_uri = request.url_for("auth_github_callback")
+    return await github.authorize_redirect(request, redirect_uri)
+
+# gitHub OAuth callback handler
+@app.get("/auth/github/callback")
+async def auth_github_callback(request: Request, db: AsyncSession = Depends(get_db)):
+    """Handles Google OAuth2 callback and user management"""
+    try:
+        # Exchange authorization code for tokens
+        token = await github.authorize_access_token(request)
+        resp = await github.get("user", token=token)
+        profile = resp.json()
+
+        # Github puede no dar email por defecto
+        email = profile.get("email")
+        if not email:
+            emails_resp = await github.get("user/emails", token=token)
+            emails = emails_resp.json()
+            email = next((e["email"] for e in emails if e["primary"] and e["verified"]), None)
+
+        if not email:
+            raise HTTPException(status_code=400, detail="No email found from GitHub")
+        
+        provider_id = str(profile["id"])
+        name = profile.get("name", profile.get("login"))
+        picture = profile.get("avatar_url", "")
+
+        #Buscar o crear usuario
+        # Buscar usuario por provider_id o por email existente
+        result = await db.execute(
+            select(User).where(
+                (User.provider_id == str(profile["id"])) | (User.email == email)
+            )
+        )
+        user = result.scalar_one_or_none()
+
+        # Create new user if not exists
+        if not user:
+            user = User(
+                provider="github",
+                provider_id=provider_id,
+                email=email,
+                name=name,
+                picture=picture
+            )
+            db.add(user)
+        else:
+            if name:  # Solo actualiza si name tiene valor
+                user.name = name
+            if picture:  # Solo actualiza si picture tiene valor
+                user.picture = picture
+
+        await db.commit()
+        await db.refresh(user)
+
+        # Generate JWT for API access
+        access_token = create_access_token(data={"sub": str(user.id)})
+        return {"access_token": access_token, "token_type": "bearer"}
+    
+    except Exception as e:
+        logging.error(f"GitHub login error: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 # Protected endpoint example
 @app.get("/protected")

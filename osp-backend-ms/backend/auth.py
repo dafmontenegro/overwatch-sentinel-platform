@@ -3,11 +3,7 @@ from datetime import datetime, timedelta
 from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends, HTTPException, status
 from .database import SessionLocal  # Importación relativa
-
-# Configuración JWT
-SECRET_KEY = "tu_super_secreto"  # Usa variables de entorno en producción
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+from .config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 

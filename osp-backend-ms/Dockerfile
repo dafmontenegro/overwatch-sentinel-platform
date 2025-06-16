@@ -18,4 +18,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "./wait-for-postgres.sh db && uvicorn backend.main:app --host 0.0.0.0 --port 8000"]
+CMD ["sh", "-c", "uvicorn backend.main:app --host 0.0.0.0 --port 8000"]
+#./wait-for-postgres.sh db && 
