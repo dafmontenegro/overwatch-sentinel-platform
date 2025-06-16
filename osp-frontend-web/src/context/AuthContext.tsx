@@ -95,22 +95,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error('Token inválido');
       }
 
-      // Guardar el token inmediatamente
-      localStorage.setItem('token', token);
-
       // Obtener el user_id del endpoint protegido
       const userId = await fetchUserId(token);
 
       // Construir el objeto User básico
       const user: User = {
         id: userId,
-        name: '', // No disponible por ahora
-        email: '', // No disponible por ahora
+        name: '',
+        email: '',
         role: 'user',
         cameras: []
       };
 
-      // Guardar usuario en localStorage
+      // Guardar en localStorage DESPUÉS de validar que todo está correcto
+      localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
       
       // Actualizar estado
@@ -133,10 +131,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         payload: errorMessage 
       });
       
-      // Re-lanzar para que LoginCallbackPage pueda manejarlo
       throw error;
     }
   };
+
 
   const logout = () => {
     // Limpiar localStorage
