@@ -33,7 +33,8 @@ Esta solución está orientada a escenarios donde se requiere supervisión efici
 ## Estructura Componente y Conector (C&C)
 ### C&C View
 
-![Component-and Connector2 drawio](https://github.com/user-attachments/assets/30f96c98-6581-4946-b477-0eb5e7c6007b)
+![{9C4C2582-A3C3-4DC9-B5FA-9FAD2A015ED8}](https://github.com/user-attachments/assets/7b005821-8202-472f-8791-225a31706bee)
+
 
 
 
