@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import HomePage from '../pages/HomePage';
+import LoginPage from '../pages/LoginPage';
 import LiveVideoPage from '../pages/LiveVideoPage';
 import LoginCallbackPage from '../pages/LoginCallbackPage';
 import PrivateRoute from './PrivateRoute';
@@ -10,6 +11,7 @@ const AppRoutes: React.FC = () => {
     <Routes>
       {/* Rutas públicas */}
       <Route path="/" element={<HomePage />} />
+      <Route path="/login" element={<LoginPage />} />
       <Route path="/login/callback" element={<LoginCallbackPage />} />
       
       {/* Rutas privadas */}
@@ -19,11 +21,8 @@ const AppRoutes: React.FC = () => {
         </PrivateRoute>
       } />
       
-      {/* Redirección al home
-      <Route path="/login" element={<Navigate to="/" replace />} /> */}
-      
       {/* Ruta para páginas no encontradas */}
-      <Route path="*" element={"No encontrado"/*<NotFoundPage />*/} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 };

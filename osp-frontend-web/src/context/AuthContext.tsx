@@ -3,14 +3,18 @@ import type { AuthState, User } from '../types/auth.types';
 import { fetchUserId } from '../services/authService';
 
 type AuthAction =
+  | { type: 'LOGIN_REQUEST' }
   | { type: 'LOGIN_SUCCESS', payload: { user: User, token: string } }
+  | { type: 'LOGIN_FAILURE', payload: string }
   | { type: 'LOGOUT' }
   | { type: 'SET_LOADING', payload: boolean }
-  | { type: 'SET_ERROR', payload: string | null };
+  | { type: 'SET_ERROR', payload: string | null }
+  | { type: 'CLEAR_ERROR' };
 
 interface AuthContextType extends AuthState {
   loginWithProvider: (token: string) => Promise<void>;
   logout: () => void;
+  clearError: () => void;
 }
 
 const initialState: AuthState = {
@@ -23,14 +27,50 @@ const initialState: AuthState = {
 
 const authReducer = (state: AuthState, action: AuthAction): AuthState => {
   switch (action.type) {
+    case 'LOGIN_REQUEST':
+      return { 
+        ...state, 
+        loading: true, 
+        error: null 
+      };
     case 'LOGIN_SUCCESS':
-      return { ...state, user: action.payload.user, token: action.payload.token, isAuthenticated: true, loading: false, error: null };
+      return { 
+        ...state, 
+        user: action.payload.user, 
+        token: action.payload.token, 
+        isAuthenticated: true, 
+        loading: false, 
+        error: null 
+      };
+    case 'LOGIN_FAILURE':
+      return { 
+        ...state, 
+        user: null, 
+        token: null, 
+        isAuthenticated: false, 
+        loading: false, 
+        error: action.payload 
+      };
     case 'LOGOUT':
-      return { ...initialState };
+      return { 
+        ...initialState 
+      };
     case 'SET_LOADING':
-      return { ...state, loading: action.payload };
+      return { 
+        ...state, 
+        loading: action.payload 
+      };
     case 'SET_ERROR':
-      return { ...state, error: action.payload };
+      return { 
+        ...state, 
+        error: action.payload,
+        loading: false 
+      };
+    case 'CLEAR_ERROR':
+      return { 
+        ...state, 
+        error: null 
+      };
     default:
       return state;
   }
@@ -39,19 +79,29 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
 export const AuthContext = createContext<AuthContextType>({
   ...initialState,
   loginWithProvider: async () => {},
-  logout: () => {}
+  logout: () => {},
+  clearError: () => {}
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
   const loginWithProvider = async (token: string) => {
-    dispatch({ type: 'SET_LOADING', payload: true });
+    dispatch({ type: 'LOGIN_REQUEST' });
+    
     try {
-      // Obtén el user_id del endpoint protegido
+      // Validar que el token no esté vacío
+      if (!token || token.trim() === '') {
+        throw new Error('Token inválido');
+      }
+
+      // Guardar el token inmediatamente
+      localStorage.setItem('token', token);
+
+      // Obtener el user_id del endpoint protegido
       const userId = await fetchUserId(token);
 
-      // Construye el objeto User básico
+      // Construir el objeto User básico
       const user: User = {
         id: userId,
         name: '', // No disponible por ahora
@@ -60,37 +110,110 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         cameras: []
       };
 
+      // Guardar usuario en localStorage
       localStorage.setItem('user', JSON.stringify(user));
-      dispatch({ type: 'LOGIN_SUCCESS', payload: { user, token } });
+      
+      // Actualizar estado
+      dispatch({ 
+        type: 'LOGIN_SUCCESS', 
+        payload: { user, token } 
+      });
+
     } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: 'Error de autenticación' });
+      // Limpiar localStorage en caso de error
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      throw error; // Re-lanzar para que LoginCallbackPage pueda manejarlo
+      
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Error de autenticación';
+      
+      dispatch({ 
+        type: 'LOGIN_FAILURE', 
+        payload: errorMessage 
+      });
+      
+      // Re-lanzar para que LoginCallbackPage pueda manejarlo
+      throw error;
     }
   };
 
-
   const logout = () => {
+    // Limpiar localStorage
     localStorage.removeItem('user');
     localStorage.removeItem('token');
+    
+    // Actualizar estado
     dispatch({ type: 'LOGOUT' });
   };
 
-  // Al cargar, verifica si hay sesión guardada
+  const clearError = () => {
+    dispatch({ type: 'CLEAR_ERROR' });
+  };
+
+  // Al cargar, verificar si hay sesión guardada
   useEffect(() => {
-    const savedToken = localStorage.getItem('token');
-    const savedUser = localStorage.getItem('user');
-    if (savedToken && savedUser) {
-      dispatch({
-        type: 'LOGIN_SUCCESS',
-        payload: { user: JSON.parse(savedUser), token: savedToken }
-      });
+    // Solo ejecutar en el cliente (evitar problemas de SSR)
+    if (typeof window === 'undefined') return;
+
+    try {
+      const savedToken = localStorage.getItem('token');
+      const savedUser = localStorage.getItem('user');
+      
+      if (savedToken && savedUser) {
+        // Validar que el JSON del usuario sea válido
+        const parsedUser = JSON.parse(savedUser);
+        
+        // Verificar que el usuario tenga las propiedades necesarias
+        if (parsedUser && parsedUser.id) {
+          dispatch({
+            type: 'LOGIN_SUCCESS',
+            payload: { 
+              user: parsedUser, 
+              token: savedToken 
+            }
+          });
+        } else {
+          // Si los datos están corruptos, limpiar
+          localStorage.removeItem('user');
+          localStorage.removeItem('token');
+        }
+      }
+    } catch (error) {
+      // Si hay error al parsear, limpiar localStorage
+      console.error('Error al cargar sesión guardada:', error);
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
     }
   }, []);
 
+  // Validar token periódicamente (opcional)
+  useEffect(() => {
+    if (!state.token || !state.isAuthenticated) return;
+
+    const validateToken = async () => {
+      try {
+        await fetchUserId(state.token!);
+      } catch (error) {
+        // Si el token es inválido, hacer logout
+        console.warn('Token inválido, cerrando sesión');
+        logout();
+      }
+    };
+
+    // Validar token cada 30 minutos
+    const interval = setInterval(validateToken, 30 * 60 * 1000);
+    
+    return () => clearInterval(interval);
+  }, [state.token, state.isAuthenticated]);
+
   return (
-    <AuthContext.Provider value={{ ...state, loginWithProvider, logout }}>
+    <AuthContext.Provider value={{ 
+      ...state, 
+      loginWithProvider, 
+      logout, 
+      clearError 
+    }}>
       {children}
     </AuthContext.Provider>
   );

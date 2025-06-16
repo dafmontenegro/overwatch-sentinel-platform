@@ -84,7 +84,6 @@ PLAY_URL = os.getenv("PLAY_URL")                  # Base URL for video playback
 
 # URL for frontend application
 FRONTEND_URL = os.getenv("FRONTEND_URL")
-print(f"Frontend URL: {FRONTEND_URL}")
 
 ### MongoDB Connection Setup ###
 # Configure MongoDB client using cluster URI from environment variables
@@ -211,7 +210,6 @@ async def auth_google_callback(request: Request, db: AsyncSession = Depends(get_
 
         # Generate JWT for API access
         access_token = create_access_token(data={"sub": str(user.id)})
-        print(f"{FRONTEND_URL} Generated access token: {access_token}")
         return RedirectResponse(f"{FRONTEND_URL}/login/callback?token={access_token}")
         #return {"access_token": access_token, "token_type": "bearer"}
 
@@ -294,7 +292,8 @@ async def auth_github_callback(request: Request, db: AsyncSession = Depends(get_
 
         # Generate JWT for API access
         access_token = create_access_token(data={"sub": str(user.id)})
-        return {"access_token": access_token, "token_type": "bearer"}
+        return RedirectResponse(f"{FRONTEND_URL}/login/callback?token={access_token}")
+        #return {"access_token": access_token, "token_type": "bearer"}
     
     except Exception as e:
         logging.error(f"GitHub login error: {str(e)}", exc_info=True)

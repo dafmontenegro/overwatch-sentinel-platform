@@ -6,7 +6,7 @@ import Logo from '../../assets/Logo.svg';
 
 const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { isAuthenticated, loginWithProvider, logout } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -18,12 +18,11 @@ const Navbar: React.FC = () => {
     setIsMenuOpen(false);
   };
 
-  const handleDirectLogin = async () => {
-    try {
-      await loginWithProvider('google');
+  const handleAccess = () => {
+    if (isAuthenticated) {
       navigate('/live');
-    } catch (error) {
-      console.error('Error al iniciar sesión:', error);
+    } else {
+      navigate('/login');
     }
   };
 
@@ -58,7 +57,7 @@ const Navbar: React.FC = () => {
               </>
             ) : (
               <button 
-                onClick={handleDirectLogin}
+                onClick={handleAccess}
                 className="bg-capri text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300"
               >
                 Iniciar Sesión
@@ -107,7 +106,7 @@ const Navbar: React.FC = () => {
             ) : (
               <button 
                 onClick={() => {
-                  handleDirectLogin();
+                  handleAccess();
                   closeMenu();
                 }}
                 className="block w-full text-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300"
