@@ -127,22 +127,52 @@ La arquitectura del sistema OSP se compone de tres dominios principales —Front
 
 Este modelo garantiza el cumplimiento de los principios de microservicios: escalabilidad, independencia, despliegue individual, integración heterogénea (Python, JS, NoSQL/SQL) y separación de responsabilidades.
 
+
 ## Layered Structure
+### Layered View
  ![Layered structure](https://github.com/user-attachments/assets/ce1152d4-e67b-43ed-82df-5333a37f14f5)
 
 ### Descripción de elementos arquitectónicos y relaciones
+
 El sistema OSP maneja 3 layers en este caso: 
+
    - Una capa de presentación que tiene elementos separados para mostrar el acceso a la cuenta del usuario, la transmision en vivo, los videos guardados y los logs generados.
+     
    - Una capa de lógica donde se realiza el proceso de autenticación de cuentas, se maneja el livestream generado por el componente físico y se procesan los videos y logs.
+     
    - Una capa de datos que maneja bases de datos para la información de autenticación, los videos, los logs y la transmisión en vivo.
+     
 
 - **Relaciones:**
    - La página de acceso requiere del proceso de autenticación para llevar al usuario a su cuenta o mostrar un error, este proceso se realiza validando la información presente en la base de datos de autenticación.
+     
    - La página de transmisiones en vivo muestra la captura del componente físico siendo procesada por el sistema y recogiendo la información desde una base de datos separada.
+     
    - La página de videos muestra un catalogo de videos guardados asociados al usuario, el componente lógico se encarga de tomar la información para generar, procesar y guardar en su propia base de datos este contenido.
+     
    - La página de logs muestra los informes generados al ser producidos y procesados los videos, estos son recuperados de su base de datos para poder ser revisados por el usuario en un formato conveniente.
 
 
+## Deployment Structure
+### Deployment View
+![Deployment structure](https://github.com/user-attachments/assets/d34490c4-268d-474a-8ade-fb5ae63b802c)
+
+
+### Descripción de elementos arquitectónicos y relaciones
+Para ser desplegado el sistema OSP tiene en consideración tres tipos de componentes físicos:
+
+   - El dispositivo del usuario
+     
+   - El servidor central
+
+   - El dispositivo de captura
+     
+- **Relaciones:**
+   -El dispositivo de captura se encuentra compuesto por cualquier cantidad de raspberrypies presentes en el hogar del usuario para cubrir las locaciones requeridas que se manejan desde un punto LAN antes de conectarse al servidor central como una entidad.
+
+  - El dispositivo del usuario puede ser cualquier tecnología desde la cual se acceda al sistema mediante una conexion a la red del servidor central.
+ 
+  - El servidor central es la máquina que recibe las peticiones del dispositivo del usuario, realiza los procesos lógicos para usar y manejar la información del dispositivo de captura
 
 # Prototipo
 
