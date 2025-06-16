@@ -1,8 +1,8 @@
 # Standard Library Imports
 import os
 import logging
-from datetime import datetime
 from dotenv import load_dotenv
+from datetime import datetime
 
 # Third-party Imports
 from fastapi import FastAPI, Depends, HTTPException
@@ -26,7 +26,7 @@ from sqlalchemy.exc import OperationalError
 from .database import SessionLocal, create_tables, get_db, engine
 from .models import User
 from .auth import create_access_token, get_current_user
-from .config import SECRET_KEY, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET
+from .config import SECRET_KEY, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, FRONTEND_URL
 
 """
     Author: Cristian Beltran
@@ -73,17 +73,12 @@ app.add_middleware(
     secret_key=SECRET_KEY,
 )
 
-load_dotenv()  # Load environment variables from .env file
-
 ### Raspberry Pi connection endpoints ###
 # Environment variables for device endpoints
 VIDEO_STREAM_URL = os.getenv("VIDEO_STREAM_URL")  # URL for live video streaming
 LOGS_URL = os.getenv("LOGS_URL")                  # URL to fetch raw logs from device
 EVENTS_URL = os.getenv("EVENTS_URL")              # URL for event notifications
 PLAY_URL = os.getenv("PLAY_URL")                  # Base URL for video playback
-
-# URL for frontend application
-FRONTEND_URL = os.getenv("FRONTEND_URL")
 
 ### MongoDB Connection Setup ###
 # Configure MongoDB client using cluster URI from environment variables
@@ -210,8 +205,10 @@ async def auth_google_callback(request: Request, db: AsyncSession = Depends(get_
 
         # Generate JWT for API access
         access_token = create_access_token(data={"sub": str(user.id)})
-        return RedirectResponse(f"{FRONTEND_URL}/login/callback?token={access_token}")
         #return {"access_token": access_token, "token_type": "bearer"}
+        return RedirectResponse(
+            url=f"{FRONTEND_URL}/login?access_token={access_token}"
+        )
 
     except Exception as e:
         logging.error(f"Critical error: {str(e)}", exc_info=True)
@@ -292,9 +289,11 @@ async def auth_github_callback(request: Request, db: AsyncSession = Depends(get_
 
         # Generate JWT for API access
         access_token = create_access_token(data={"sub": str(user.id)})
-        return RedirectResponse(f"{FRONTEND_URL}/login/callback?token={access_token}")
         #return {"access_token": access_token, "token_type": "bearer"}
-    
+        return RedirectResponse(
+            url=f"{FRONTEND_URL}/login?access_token={access_token}"
+        )
+
     except Exception as e:
         logging.error(f"GitHub login error: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal Server Error")

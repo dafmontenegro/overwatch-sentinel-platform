@@ -1,4 +1,5 @@
 import React from 'react';
+import TextLogo from '../assets/Logo-CapriBlue.svg';
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -6,38 +7,28 @@ interface AuthLayoutProps {
 
 const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        {/* Logo de OSP */}
-        <div className="text-center">
-          <div className="mx-auto h-16 w-16 bg-blue-600 rounded-lg flex items-center justify-center">
-            <svg 
-              className="h-10 w-10 text-white" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" 
-              />
-            </svg>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-whitegray via-gray-50 to-caprilight/20 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full">
+        <div className="flex justify-center -mb-8">
+          <div className="transform transition-transform duration-300 hover:scale-105">
+            <img 
+              src={TextLogo} 
+              alt="OSP Overwatch Sentinel Platform" 
+              className="h-64 w-auto drop-shadow-lg" 
+            />
           </div>
-          <h1 className="mt-4 text-2xl font-bold text-gray-900">
-            OSP Sentinel
-          </h1>
-          <p className="text-sm text-gray-600">
-            Overwatch Sentinel Platform
-          </p>
         </div>
 
-        {children}
+        <div className="bg-white/95 backdrop-blur-sm py-8 px-12 shadow-2xl rounded-2xl border border-gray-200/50 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-capri/5 via-transparent to-caprilight/5 pointer-events-none"></div>
 
-        {/* Footer */}
-        <div className="text-center">
-          <p className="text-xs text-gray-500">
+          <div className="relative z-10">
+            {children}
+          </div>
+        </div>
+
+        <div className="text-center mt-8">
+          <p className="text-xs text-asphaltlight/70 font-medium">
             © 2025 OSP Sentinel Platform. Todos los derechos reservados.
           </p>
         </div>
