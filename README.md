@@ -170,12 +170,38 @@ Para ser desplegado el sistema OSP tiene en consideración tres tipos de compone
    - El dispositivo de captura
      
   **Relaciones:**
-
-   -El dispositivo de captura se encuentra compuesto por cualquier cantidad de raspberrypies presentes en el hogar del usuario para cubrir las locaciones requeridas que se manejan desde un punto LAN antes de conectarse al servidor central como una entidad.
+  
+  - El dispositivo de captura se encuentra compuesto por cualquier cantidad de raspberrypies presentes en el hogar del usuario para cubrir las locaciones requeridas que se manejan desde un punto LAN antes de conectarse al servidor central como una entidad.
 
   - El dispositivo del usuario puede ser cualquier tecnología desde la cual se acceda al sistema mediante una conexion a la red del servidor central.
  
-  - El servidor central es la máquina que recibe las peticiones del dispositivo del usuario, realiza los procesos lógicos para usar y manejar la información del dispositivo de captura
+  - El servidor central es la máquina que recibe las peticiones del dispositivo del usuario, realiza los procesos lógicos para usar y manejar la información del dispositivo de captura.
+
+## Deployment Structure
+### Deployment View
+![Decomposition structure](https://github.com/user-attachments/assets/ca1c845a-ea39-4183-9966-1ead49c842db)
+
+
+### Descripción de elementos arquitectónicos y relaciones
+El sistema OSP trabaja con 4 elementos actualmente según las funciones que realiza:
+   - Visualización
+
+   - Autenticación
+
+   - Procesamiento de imagenes
+
+   - Almacenamiento de datos
+
+   **Relaciones:**
+   
+   Se tiene la presentación de las diferentes páginas para que el usuario interactue o realice peticiones al sistema.
+   
+   Hay un proceso para la autenticación para todos los usuarios comprobando la información presente.
+
+   Las imagenes generadas por los componentes físicos son procesadas para que puedan ser vistas o guardadas según sea necesario.
+
+   Todos los datos necesarios se guardan en bases de datos para garantizar permanencia e integridad. 
+   
 
 # Prototipo
 
@@ -196,7 +222,6 @@ Para ser desplegado el sistema OSP tiene en consideración tres tipos de compone
 6. Posicionarse en la carpeta raiz *"...\overwatch-sentinel-platform-master"*, abrir una terminal y ejecutar las siguientes instrucciones.
    
    6.1. docker-compose build --no-cache
-![2dbfc5d1-6539-4b55-9403-359d9405f685](https://github.com/user-attachments/assets/af474df0-aace-4dd2-abda-e5ec244d2ea2)
 
    ![image](https://github.com/user-attachments/assets/3f6230bb-48da-4452-91eb-046e9cd028c1)
 
