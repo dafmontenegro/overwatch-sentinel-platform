@@ -97,7 +97,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Obtener el user_id del endpoint protegido
       const userData = await fetchUser(token);
-      console.log(userData);
 
       // Validar que tenemos todos los datos necesarios
       if (!userData.id || !userData.email) {
