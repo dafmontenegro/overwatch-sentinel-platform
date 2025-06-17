@@ -136,7 +136,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             {user && (
               <div className={`flex ${isSidebarOpen ? 'items-center' : 'flex-col items-center'} text-sm`}>
                 <div className="w-8 h-8 rounded-full bg-capri flex items-center justify-center text-white font-bold">
-                  {user.name.charAt(0)}
+                  {user.email.charAt(0).toUpperCase()}
                 </div>
                 {isSidebarOpen && (
                   <div className="ml-3 overflow-hidden">
@@ -173,6 +173,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                 {/* {location.pathname === '/settings' && 'Configuración'} */}
               </h2>
             </div>
+            {/* Notificaciones */}
             {/* <div className="flex items-center space-x-4">
               <div className="relative">
                 <button className="p-1 text-gray-400 rounded-full hover:bg-whitegray focus:outline-none">

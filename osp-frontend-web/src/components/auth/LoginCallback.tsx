@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useLoginCallback } from '../../hooks/useLoginCallback';
 import AuthLayout from '../../layouts/AuthLayout';
 
 interface LoginCallbackProps {
@@ -9,67 +9,7 @@ interface LoginCallbackProps {
 
 const LoginCallback: React.FC<LoginCallbackProps> = ({ onComplete }) => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { loginWithProvider, clearError } = useAuth();
-  const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing');
-  const [errorMessage, setErrorMessage] = useState<string>('');
-
-  useEffect(() => {
-    const processCallback = async () => {
-      try {
-        const params = new URLSearchParams(location.search);
-        const accessToken = params.get('access_token');
-        const authError = params.get('error');
-
-        // Limpiar errores previos
-        clearError();
-
-        if (authError) {
-          throw new Error(getErrorMessage(authError));
-        }
-
-        if (!accessToken) {
-          throw new Error('No se recibió token de autenticación');
-        }
-
-        // Procesar el token
-        await loginWithProvider(accessToken);
-        setStatus('success');
-
-        // Esperar un momento para mostrar el éxito antes de redirigir
-        setTimeout(() => {
-          navigate('/live', { replace: true });
-          onComplete?.();
-        }, 1500);
-
-      } catch (error) {
-        console.error('Error en callback de autenticación:', error);
-        setStatus('error');
-        setErrorMessage(error instanceof Error ? error.message : 'Error desconocido');
-
-        // Redirigir al login después de mostrar el error
-        setTimeout(() => {
-          navigate('/login', { replace: true });
-          onComplete?.();
-        }, 3000);
-      }
-    };
-
-    processCallback();
-  }, [location, loginWithProvider, navigate, clearError, onComplete]);
-
-  const getErrorMessage = (error: string): string => {
-    const errorMessages: Record<string, string> = {
-      'access_denied': 'Acceso denegado. Has cancelado la autenticación.',
-      'invalid_request': 'Solicitud inválida. Intenta de nuevo.',
-      'unauthorized_client': 'Cliente no autorizado.',
-      'unsupported_response_type': 'Tipo de respuesta no soportado.',
-      'invalid_scope': 'Alcance inválido.',
-      'server_error': 'Error del servidor. Intenta más tarde.',
-      'temporarily_unavailable': 'Servicio temporalmente no disponible.',
-    };
-    return errorMessages[error] || `Error de autenticación: ${error}`;
-  };
+  const { status, errorMessage, retryCallback } = useLoginCallback();
 
   const getStatusConfig = () => {
     switch (status) {
@@ -119,6 +59,13 @@ const LoginCallback: React.FC<LoginCallbackProps> = ({ onComplete }) => {
 
   const config = getStatusConfig();
 
+  // Llamar onComplete cuando el proceso termine
+  React.useEffect(() => {
+    if (status === 'success' || status === 'error') {
+      onComplete?.();
+    }
+  }, [status, onComplete]);
+
   return (
     <AuthLayout>
       <div className={`text-center py-8 px-6 rounded-lg border-2 ${config.color} ${config.bgColor}`}>
@@ -141,10 +88,16 @@ const LoginCallback: React.FC<LoginCallbackProps> = ({ onComplete }) => {
         )}
 
         {status === 'error' && (
-          <div className="mt-6">
+          <div className="mt-6 space-y-3">
+            <button
+              onClick={retryCallback}
+              className="px-4 py-2 bg-capri text-white rounded-lg hover:bg-capridark transition duration-200 mr-3"
+            >
+              Reintentar
+            </button>
             <button
               onClick={() => navigate('/login', { replace: true })}
-              className="px-4 py-2 bg-capri text-white rounded-lg hover:bg-capridark transition duration-200"
+              className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition duration-200"
             >
               Volver al login
             </button>

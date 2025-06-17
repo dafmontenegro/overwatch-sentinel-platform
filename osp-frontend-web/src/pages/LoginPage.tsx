@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useLoginCallback } from '../hooks/useLoginCallback';
 import AuthLayout from '../layouts/AuthLayout';
 import LoginCallback from '../components/auth/LoginCallback';
 import { SiGoogle } from 'react-icons/si'; 
@@ -10,21 +11,18 @@ const API_URL = import.meta.env.VITE_BACK_API_URL;
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { isAuthenticated, error } = useAuth();
+  const { isCallbackRoute } = useLoginCallback();
 
-  // Verificar si hay parámetros de callback
-  const params = new URLSearchParams(location.search);
-  const hasCallbackParams = params.has('access_token') || params.has('error');
-
-  // Redirigir si ya está autenticado
+  // Redirigir si ya está autenticado y no es una ruta de callback
   useEffect(() => {
-    if (isAuthenticated && !hasCallbackParams) {
+    if (isAuthenticated && !isCallbackRoute) {
       navigate('/live');
     }
-  }, [isAuthenticated, navigate, hasCallbackParams]);
+  }, [isAuthenticated, navigate, isCallbackRoute]);
 
-  if (hasCallbackParams) {
+  // Mostrar el componente de callback si estamos en una ruta de callback
+  if (isCallbackRoute) {
     return <LoginCallback />;
   }
 
@@ -44,7 +42,6 @@ const LoginPage: React.FC = () => {
           </p>
         </div>
 
-        {/* Mostrar error si existe */}
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
             <div className="flex">

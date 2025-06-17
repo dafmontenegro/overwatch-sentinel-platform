@@ -1,6 +1,6 @@
 import React, { createContext, useReducer, useEffect } from 'react';
 import type { AuthState, User } from '../types/auth.types';
-import { fetchUserId } from '../services/authService';
+import { fetchUser, fetchUserId } from '../services/authService';
 
 type AuthAction =
   | { type: 'LOGIN_REQUEST' }
@@ -96,25 +96,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // Obtener el user_id del endpoint protegido
-      const userId = await fetchUserId(token);
+      const userData = await fetchUser(token);
+      console.log(userData);
 
-      // Construir el objeto User básico
-      const user: User = {
-        id: userId,
-        name: '',
-        email: '',
-        role: 'user',
-        cameras: []
-      };
+      // Validar que tenemos todos los datos necesarios
+      if (!userData.id || !userData.email) {
+        throw new Error('Datos de usuario incompletos');
+      }
 
       // Guardar en localStorage DESPUÉS de validar que todo está correcto
       localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('user', JSON.stringify(userData));
       
       // Actualizar estado
       dispatch({ 
         type: 'LOGIN_SUCCESS', 
-        payload: { user, token } 
+        payload: { 
+          user: userData, 
+          token 
+        } 
       });
 
     } catch (error) {

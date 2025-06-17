@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import sessionmaker, declarative_base, Session
+from sqlalchemy import select
 from .config import DATABASE_URL
 
 #DATABASE_URL = "postgresql+asyncpg://auth_user:abc123@db:5432/auth_db"
