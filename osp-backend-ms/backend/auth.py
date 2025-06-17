@@ -57,11 +57,7 @@ async def get_user(token: str = Depends(oauth2_scheme), db: Session = Depends(ge
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Usuario no encontrado"
             )
-            
-        return user
         
     except JWTError:
         raise credentials_exception
-    except ValueError:
-        # Error al convertir user_id a int
-        raise credentials_exception
+    return user

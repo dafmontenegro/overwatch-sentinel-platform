@@ -25,6 +25,31 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     return location.pathname === path;
   };
 
+  const UserAvatar = ({ user }: { user: any }) => {
+    const [imageError, setImageError] = useState(false);
+
+    if (imageError || !user.picture) {
+      return (
+        <div className="w-8 h-8 rounded-full bg-capri flex items-center justify-center text-white font-bold">
+          {user.name.charAt(0).toUpperCase()}
+        </div>
+      );
+    }
+
+    return (
+      <div className="w-8 h-8 rounded-full overflow-hidden">
+        <img 
+          src={user.picture} 
+          alt={user.name}
+          className="w-full h-full object-cover"
+          onError={() => setImageError(true)}
+          loading="lazy"
+          referrerPolicy="no-referrer"
+        />
+      </div>
+    );
+  };
+
   return (
     <div className="flex h-screen bg-whitegray">
       {/* Sidebar */}
@@ -135,9 +160,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           <div className="mt-4">
             {user && (
               <div className={`flex ${isSidebarOpen ? 'items-center' : 'flex-col items-center'} text-sm`}>
-                <div className="w-8 h-8 rounded-full bg-capri flex items-center justify-center text-white font-bold">
-                  {user.email.charAt(0).toUpperCase()}
-                </div>
+                <UserAvatar user={user}/>
                 {isSidebarOpen && (
                   <div className="ml-3 overflow-hidden">
                     <p className="text-white truncate">{user.name}</p>
