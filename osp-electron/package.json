@@ -1,0 +1,29 @@
+{
+  "name": "osp-electron",
+  "version": "1.0.0",
+  "description": "Aplicación de escritorio para Overwatch Sentinel Platform",
+  "author": "OSP",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^28.2.5",
+    "electron-builder": "^26.0.12",
+    "electron-packager": "^17.1.2"
+  },
+  "build": {
+    "appId": "com.osp.app",
+    "productName": "OSP Desktop",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*"
+    ],
+    "win": {
+      "target": "nsis"
+    }
+  }
+}
