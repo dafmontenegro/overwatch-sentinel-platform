@@ -4,7 +4,9 @@ services:
   # # # # # # PHYSICAL CONNECTION # # # # # #
   # Primer contenedor encargado de controlar la red LAN sobre los dispositivos conectados
   osp-home-ms:
-    build: .
+    build: 
+      context: ./home-lan/osp-home-ms
+      dockerfile: Dockerfile
     image: osp-home-ms:latest
     container_name: home-ms
     ports:
@@ -127,10 +129,8 @@ services:
       - REDIS_HOST=redis-db
       - REDIS_PORT=6379
     depends_on:
-      osp-raspberry-ms:
-        condition: service_healthy
-      redis-db:
-        condition: service_healthy
+      - osp-raspberry-ms
+      - redis-db
     networks:
       - osp-network
   
