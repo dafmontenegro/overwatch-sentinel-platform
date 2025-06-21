@@ -1,0 +1,16 @@
+services:
+  osp-raspberrypi-ms:
+    build: .
+    image: osp-raspberrypi-ms
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    environment:
+      - TZ=America/Bogota
+    devices:
+      - /dev/video0:/dev/video0
+    privileged: 
+      true
+    networks:
+      -   osp-network
+
