@@ -1,4 +1,3 @@
-version: "Prototype_3"
 
 services:
   # # # # # # PHYSICAL CONNECTION # # # # # #
@@ -180,21 +179,23 @@ services:
     # # # # # # FRONTEND, PRESENTATION PART # # # # # #
   # Octavo contenedor alojando el frontend de la aplicación de manera web
   osp-frontend-web:
-    build: 
+    build:
       context: ./osp-frontend-web
+    image: osp-frontend-web:dev
     ports:
       - "5173:5173"
     env_file:
-      - ./osp-frontend-web/.env
+      - .env
     environment:
-      - NODE_ENV=development
-    depends_on:
-      - osp-api-gateway
+      - NODE_ENV=production
+    networks:
+      - osp-network
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5173"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
     
   # Noveno contenedor alojando el frontend de la aplicación de manera encapsulada
   osp-frontend-desktop:
