@@ -68,6 +68,45 @@ db_name = os.getenv("MONGODB_DB")
 db = client[db_name]
 collection_name = os.getenv("MONGODB_COLLECTION")
 
+##### Test video storage code #####
+
+
+
+import redis
+
+#Setup Redis connection (configure via environment variables)
+redis_host = os.getenv("REDIS_HOST", "localhost")
+redis_port = int(os.getenv("REDIS_PORT", 6379))
+redis_db = int(os.getenv("REDIS_DB", 0))
+redis_client = redis.Redis(host=redis_host, port=redis_port, db=redis_db)
+
+async def store_video_stream_in_redis():
+    """
+    Proxies the video stream and stores each chunk in Redis.
+    Each chunk is stored with an incrementing key for later retrieval.
+    """
+    stream_key = f"video_stream:{datetime.utcnow().isoformat()}"
+    chunk_counter = 0
+    async with httpx.AsyncClient() as client:
+        async with client.stream("GET", VIDEOS_URL) as response:
+            async for chunk in response.aiter_bytes():
+                # Store each chunk in Redis list
+                redis_client.rpush(stream_key, chunk)
+                chunk_counter += 1
+    return stream_key  # Return the key for reference
+
+# Endpoint to trigger storing the video stream in Redis
+@app.post("/video/store")
+async def store_video():
+    """
+    Endpoint to start storing the video stream in Redis.
+    Returns the Redis key where the stream is stored.
+    """
+    stream_key = await store_video_stream_in_redis()
+    return {"message": "Video stream stored in Redis", "redis_key": stream_key}
+
+#####
+
 async def proxy_video_stream():
     """
     Asynchronous generator function to proxy video stream from Raspberry Pi.
