@@ -3,6 +3,20 @@ import os
 import logging
 from datetime import datetime
 
+import redis
+
+#Setup Redis connection (configure via environment variables)
+print("Connecting to Redis...")
+redis_host = os.getenv("REDIS_HOST", "localhost")
+redis_port = int(os.getenv("REDIS_PORT", 6379))
+redis_db = int(os.getenv("REDIS_DB", 0))
+redis_client = redis.Redis(host=redis_host, port=redis_port, db=redis_db)
+
+#Redis ping test
+r = redis.Redis(redis_host, socket_connect_timeout=1) # short timeout for the test
+r.ping() 
+print('connected to redis "{}"'.format(redis_host))
+
 # Third-party Imports
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse, JSONResponse
@@ -72,13 +86,20 @@ collection_name = os.getenv("MONGODB_COLLECTION")
 
 
 
-import redis
+
+
 
 #Setup Redis connection (configure via environment variables)
+print("Connecting to Redis...")
 redis_host = os.getenv("REDIS_HOST", "localhost")
 redis_port = int(os.getenv("REDIS_PORT", 6379))
 redis_db = int(os.getenv("REDIS_DB", 0))
 redis_client = redis.Redis(host=redis_host, port=redis_port, db=redis_db)
+
+#Redis ping test
+r = redis.Redis(redis_host, socket_connect_timeout=1) # short timeout for the test
+r.ping() 
+print('connected to redis "{}"'.format(redis_host))
 
 async def store_video_stream_in_redis():
     """
