@@ -272,7 +272,7 @@ if __name__ == "__main__":
                     day_info["hours"].append(hour_info )
                 days.append(day_info)
             if not days:
-                h1 = "NO EVENTS AVAIBLE"
+                h1 = "NO EVENTS AVAILABLE"
             return render_template("events.html", events=days, h1=h1)
         
         @app.route("/play/<path:video_path>")

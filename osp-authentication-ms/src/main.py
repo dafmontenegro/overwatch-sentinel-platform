@@ -37,7 +37,6 @@ from .config import SECRET_KEY, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, FRONTEND
     - APScheduler: For scheduling background tasks
     - fastapi: Web framework for building API endpoints
     - httpx: Asynchronous HTTP client for making requests
-    - pymongo: MongoDB client for database operations
     - uvicorn: ASGI server for running the application
     Version: 1.0
 """
