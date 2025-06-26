@@ -1,0 +1,22 @@
+version: "3.9"
+
+networks:
+  red_interna:
+    internal: true
+  red_externa:
+    driver: bridge
+
+services:
+
+  emisor:
+    build: ./emisor
+    networks:
+      - red_interna
+
+  intermediario:
+    build: ./intermediario
+    networks:
+      - red_interna
+      - red_externa
+    ports:
+      - "8000:8000"
