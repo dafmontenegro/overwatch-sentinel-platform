@@ -1,0 +1,20 @@
+services:
+  osp-authentication-ms:
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+
+  osp-information-ms:
+    depends_on:
+      - osp-raspberrypi-ms
+      - redis-db
+
+  osp-api-gateway:
+    depends_on:
+      - osp-authentication-ms
+      - osp-information-ms
+      - osp-raspberrypi-ms
+
+  # osp-frontend-desktop:
+  #   depends_on:
+  #     - osp-frontend-web
