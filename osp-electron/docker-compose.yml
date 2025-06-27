@@ -1,0 +1,10 @@
+services:
+  osp-frontend-desktop:
+    build: 
+      context: .
+    depends_on:
+      - osp-frontend-web
+    volumes:
+      - ./dist:/app/dist
+    networks:
+      - osp-network-public

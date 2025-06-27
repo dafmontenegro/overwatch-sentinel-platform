@@ -22,7 +22,7 @@ from sqlalchemy.exc import OperationalError
 from .database import SessionLocal, create_tables, get_db, engine
 from .models import User
 from .auth import create_access_token, get_current_user
-from .config import SECRET_KEY, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, FRONTEND_URL
+from .config import SECRET_KEY, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, FRONTEND_URL, GOOGLE_REDIRECT_URI, GITHUB_REDIRECT_URI
 
 """
     Author: MiguelAngel Mosquera
@@ -112,7 +112,10 @@ google = oauth.register(
 @app.get("/auth/google")
 async def login_google(request: Request):
     """Initiates Google OAuth2 flow"""
-    redirect_uri = request.url_for("auth_google_callback")  # Callback endpoint name
+    #redirect_uri = request.url_for("auth_google_callback")  # Callback endpoint name
+    redirect_uri = GOOGLE_REDIRECT_URI  # Use the configured redirect URI
+    if not redirect_uri:
+        raise HTTPException(status_code=500, detail="Google redirect URI not configured")
     return await google.authorize_redirect(request, redirect_uri)
 
 # Database dependency
@@ -196,7 +199,10 @@ github = oauth.register(
 @app.get("/auth/github")
 async def login_github(request: Request):
     """Initiates GitHub OAuth2 flow"""
-    redirect_uri = request.url_for("auth_github_callback")
+    #redirect_uri = request.url_for("auth_github_callback")
+    redirect_uri = GITHUB_REDIRECT_URI  # Use the configured redirect URI
+    if not redirect_uri:
+        raise HTTPException(status_code=500, detail="GitHub redirect URI not configured")
     return await github.authorize_redirect(request, redirect_uri)
 
 # gitHub OAuth callback handler

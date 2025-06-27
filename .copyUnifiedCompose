@@ -1,0 +1,56 @@
+# services:
+# # # # # # # PHYSICAL CONNECTION # # # # # #
+#   # Primer contenedor encargado de controlar la red LAN sobre los dispositivos conectados
+# #  osp-home-ms:
+# #    build: 
+# #      context: ./home-lan/osp-home-ms
+# #      dockerfile: Dockerfile
+# #    image: osp-home-ms:latest
+# #    container_name: home-ms
+# #    ports:
+# #      - "8080:8080"
+# #      - "9999:9999"
+# #    restart: unless-stopped
+# #    environment:
+# #      - TZ=America/Bogota
+# #      - HOST=0.0.0.0
+# #      - PORT=8080
+# #      - ALLOWED_HOSTS=overwatch-sentinel-platform.local
+# #    volumes:
+# #      - ./events:/app/events
+# #      - ./logs:/app/logs
+# #    command: python security_server.py --host ${HOST:-0.0.0.0} --port ${PORT:-8080} --allowed-hosts ${ALLOWED_HOSTS}
+#   # Segundo contenedor encargado de controlar la Raspberry Pi y la cámara conectada
+# #  osp-raspberry-ms:
+# #    build: 
+# #      #context: ./home-lan/osp-raspberrypi-ms
+# #      context: ./osp-raspberrypi-ms
+# #      dockerfile: Dockerfile
+# #    image: osp-raspberry-ms
+# #    container_name: osp-raspberry-ms
+# #    restart: unless-stopped
+# #    environment:
+# #      - TZ=America/Bogota
+# #      - SERVER_HOST=macbook-air-5-2.local
+# #      - SERVER_PORT=9999
+# #    devices:
+# #      - /dev/video0:/dev/video0
+# #    privileged: true
+# #    volumes:
+# #      - ./logs:/app/logs
+# #    command: python raspberry_pi_detector.py --server-host ${SERVER_HOST:-macbook-air-5-2.local} --server-port ${SERVER_PORT:-9999}
+
+#   osp-raspberrypi-ms:
+#     build:
+#       context: .
+#       dockerfile: Dockerfile
+#     image: osp-raspberrypi-ms
+#     container_name: osp-raspberrypi-ms
+#     restart: unless-stopped
+#     environment:
+#       - TZ=America/Bogota
+#     devices:
+#       - /dev/video0:/dev/video0
+#     privileged: true
+#     networks:
+#       - osp-network-priv

@@ -1,0 +1,22 @@
+services:
+  nginx-proxy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./conf.d:/etc/nginx/conf.d:ro
+      - nginx_logs:/var/log/nginx
+    networks:
+      - osp-network-public
+    depends_on:
+      - osp-api-gateway
+      - osp-frontend-web
+    restart: unless-stopped
+
+volumes:
+  nginx_logs:
+    driver: local

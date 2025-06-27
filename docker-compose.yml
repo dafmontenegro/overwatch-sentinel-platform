@@ -1,223 +1,27 @@
+name: osp-platform
 
-services:
-  # # # # # # PHYSICAL CONNECTION # # # # # #
-  # Primer contenedor encargado de controlar la red LAN sobre los dispositivos conectados
-#  osp-home-ms:
-#    build: 
-#      context: ./home-lan/osp-home-ms
-#      dockerfile: Dockerfile
-#    image: osp-home-ms:latest
-#    container_name: home-ms
-#    ports:
-#      - "8080:8080"
-#      - "9999:9999"
-#    restart: unless-stopped
-#    environment:
-#      - TZ=America/Bogota
-#      - HOST=0.0.0.0
-#      - PORT=8080
-#      - ALLOWED_HOSTS=overwatch-sentinel-platform.local
-#    volumes:
-#      - ./events:/app/events
-#      - ./logs:/app/logs
-#    command: python security_server.py --host ${HOST:-0.0.0.0} --port ${PORT:-8080} --allowed-hosts ${ALLOWED_HOSTS}
-  # Segundo contenedor encargado de controlar la Raspberry Pi y la cámara conectada
-#  osp-raspberry-ms:
-#    build: 
-#      #context: ./home-lan/osp-raspberrypi-ms
-#      context: ./osp-raspberrypi-ms
-#      dockerfile: Dockerfile
-#    image: osp-raspberry-ms
-#    container_name: osp-raspberry-ms
-#    restart: unless-stopped
-#    environment:
-#      - TZ=America/Bogota
-#      - SERVER_HOST=macbook-air-5-2.local
-#      - SERVER_PORT=9999
-#    devices:
-#      - /dev/video0:/dev/video0
-#    privileged: true
-#    volumes:
-#      - ./logs:/app/logs
-#    command: python raspberry_pi_detector.py --server-host ${SERVER_HOST:-macbook-air-5-2.local} --server-port ${SERVER_PORT:-9999}
-  osp-raspberrypi-ms:
-      build: 
-        context: ./osp-raspberrypi-ms
-        dockerfile: Dockerfile
-      image: osp-raspberrypi-ms
-      # ports:
-      #   - "80:80"
-      restart: unless-stopped
-      environment:
-        - TZ=America/Bogota
-      devices:
-        - /dev/video0:/dev/video0
-      privileged: true
-      networks:
-        - osp-network-priv
+volumes:
+  redis_db:
+  postgres_db:
 
-  # # # # # # DATA BASES # # # # # #
-
-  # Tercer contenedor alojando la base de datos redis
-  redis-db:
-    image: redis:latest
-    container_name: redis-db
-    restart: unless-stopped
-    # ports:
-    #   - "6379:6379"
-    environment:
-      - TZ=America/Bogota
-    volumes:
-      - redis_db:/data
-    command: redis-server --save 3600 1 --maxmemory 500mb --maxmemory-policy allkeys-lru
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    networks:
-      - osp-network-priv
-    
-  # Cuarto contenedor alojando la base de datos DE PostgreSQL
-  postgres-db:
-    image: postgres:13-alpine
-    container_name: postgres-db
-    env_file: ./osp-authentication-ms/.env
-    volumes:
-      - postgres_db:/var/lib/postgresql/data
-    # ports:
-    #   - "5432:5432"
-    environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    command: postgres -c listen_addresses='*'
-    networks:
-      - osp-network-priv
-
-# # # # # # BACKEND, LOGICAL PART # # # # # #
-
-  # Quinto contenedor alojando el microservicio de autenticación
-  osp-authentication-ms:
-    build: 
-      context: ./osp-authentication-ms
-      dockerfile: Dockerfile
-    image: osp-authentication-ms:dev
-    container_name: osp-authentication-ms
-    # ports:
-    #   - "8000:8000"
-    env_file:
-      - ./osp-authentication-ms/.env
-    restart: unless-stopped
-    environment:
-      - TZ=America/Bogota
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
-    depends_on:
-      postgres-db:
-        condition: service_healthy
-    networks:
-      - osp-network-priv
-  
-  # Sexto contenedor alojando el microservicio de información recolectada
-  osp-information-ms:
-    build: 
-      context: ./osp-information_gestor-ms
-    container_name: osp-information-ms
-    # ports:
-    #   - "8001:8001"
-    env_file:
-      - ./osp-information_gestor-ms/.env
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    environment:
-      - TZ=America/Bogota
-      - REDIS_HOST=redis-db
-      - REDIS_PORT=6379
-    depends_on:
-      - osp-raspberrypi-ms
-      - redis-db
-    networks:
-      - osp-network-priv
-  
-  # Septimo contenedor alojando el API gateway de la aplicación
-  osp-api-gateway:
-    build: 
-      context: ./api-gateway-ms
-    container_name: osp-api-gateway
-    # ports:
-    #   - "8887:8887"
-    environment:
-      - TZ=America/Bogota
-      - INFORMATION_SERVICE_URL=http://information-gestor-ms:8001
-      - RASPBERRYPI_SERVICE_URL=http://osp-raspberrypi-ms:80
-      - AUTH_SERVICE_URL=http://osp-authentication-ms:8000
-      - REDIS_URL=redis://redis-db:6379
-    depends_on:
-      - osp-authentication-ms
-      - osp-information-ms
-      - osp-raspberrypi-ms
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8888/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-    networks:
-      - osp-network-public
-      - osp-network-priv
-    restart: unless-stopped
-
-    # # # # # # FRONTEND, PRESENTATION PART # # # # # #
-  # Octavo contenedor alojando el frontend de la aplicación de manera web
-  osp-frontend-web:
-    build:
-      context: ./osp-frontend-web
-    image: osp-frontend-web:dev
-    ports:
-      - "5173:5173"
-    env_file:
-      - .env
-    environment:
-      - NODE_ENV=production
-    networks:
-      - osp-network-public
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5173"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    
-  # Noveno contenedor alojando el frontend de la aplicación de manera encapsulada
-  osp-frontend-desktop:
-    build: 
-      context: ./osp-electron
-    depends_on:
-      - osp-frontend-web
-    volumes:
-      - ./osp-electron/dist:/app/dist
-    networks:
-      - osp-network-public
-  
-# # # # # # NETWORKS # # # # # #
 networks:
   osp-network-public:
     driver: bridge
   osp-network-priv:
     driver: bridge
 
-# # # # # # VOLUMES # # # # # #
-volumes:
-  redis_db:
-  postgres_db:
+include:
+  - path: osp-authentication-ms/docker-compose.yml
+    project_directory: osp-authentication-ms/
+  - path: osp-information_gestor-ms/docker-compose.yml
+    project_directory: osp-information_gestor-ms/
+  - path: osp-raspberrypi-ms/docker-compose.yml
+    project_directory: osp-raspberrypi-ms/
+  - path: osp-nginx-proxy/docker-compose.yml
+    project_directory: osp-nginx-proxy/
+  - path: api-gateway-ms/docker-compose.yml
+    project_directory: api-gateway-ms/
+  - path: osp-frontend-web/docker-compose.yml
+    project_directory: osp-frontend-web/
+  # - path: osp-electron/docker-compose.yml
+  #   project_directory: osp-electron/
