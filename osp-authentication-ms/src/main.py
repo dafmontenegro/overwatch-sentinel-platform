@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from datetime import datetime
 
 # Third-party Imports
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse, JSONResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
@@ -21,7 +21,8 @@ from sqlalchemy.exc import OperationalError
 # Relative Imports 
 from .database import SessionLocal, create_tables, get_db, engine
 from .models import User
-from .auth import create_access_token, get_current_user
+from .auth import create_access_token, get_current_user, get_user
+from .schemas import UserResponse, User as UserSchema
 from .config import SECRET_KEY, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, FRONTEND_URL, GOOGLE_REDIRECT_URI, GITHUB_REDIRECT_URI
 
 """
@@ -273,6 +274,30 @@ async def auth_github_callback(request: Request, db: AsyncSession = Depends(get_
 async def protected_route(current_user: str = Depends(get_current_user)):
     """Example protected route requiring valid JWT"""
     return {"message": "Authorized access", "user_id": current_user}
+
+# Obtener Current User
+@app.get("/user/me", response_model=UserResponse)
+async def get_user_profile(current_user: User = Depends(get_user)):
+    """
+    Obtiene la información completa del perfil del usuario autenticado
+    """
+    try:
+        return UserResponse(
+            user=UserSchema(
+                id=current_user.id,
+                email=current_user.email,
+                name=current_user.name,
+                picture=current_user.picture,
+                provider=current_user.provider,
+                provider_id=current_user.provider_id
+            )
+        )
+    except Exception as e:
+        logger.error(f"Error al obtener perfil de usuario: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor"
+        )
 
 # Root endpoint
 @app.get("/")

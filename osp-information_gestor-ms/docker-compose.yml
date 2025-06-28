@@ -19,6 +19,7 @@ services:
       - redis-db
     networks:
       - osp-network-priv
+      - osp-network-public
 
   redis-db:
     image: redis:latest

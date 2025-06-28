@@ -18,6 +18,7 @@ services:
         condition: service_healthy
     networks:
       - osp-network-priv
+      - osp-network-public
 
   postgres-db:
     image: postgres:13-alpine
