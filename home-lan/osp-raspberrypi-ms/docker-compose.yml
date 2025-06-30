@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  raspberry-detector:
+    build: .
+    container_name: raspberry-detector
+    restart: unless-stopped
+    devices:
+      - "/dev/video0:/dev/video0"  # Camera device
+    volumes:
+      - ./models:/app/models
+      - ./test_videos:/app/test_videos  # For fallback videos
+    environment:
+      - SERVER_HOST=security-server  # Hostname of the server
+      - SERVER_PORT=8080
+      - LOG_LEVEL=INFO
+    command: >
+      python raspberry_pi_detector.py 
+      --server-host ${SERVER_HOST:-security-server} 
+      --server-port ${SERVER_PORT:-8080}
+      --log-level ${LOG_LEVEL:-INFO}
+    networks:
+      - security-network
+
+networks:
+  security-network:
+    external: true
+    name: security-network
