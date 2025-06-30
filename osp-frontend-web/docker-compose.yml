@@ -2,9 +2,12 @@ services:
   osp-frontend-web:
     build:
       context: .
+    ports:
+      - "5173:5173"
     image: osp-frontend-web:dev
     env_file:
       - .env
+    
     environment:
       - NODE_ENV=production
     networks:

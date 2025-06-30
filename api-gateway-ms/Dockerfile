@@ -16,7 +16,7 @@ RUN chmod +x gradlew
 RUN ./gradlew clean shadowJar
 
 # Puerto estándar de Vert.x
-EXPOSE 8888
+EXPOSE 8887
 
 # Comando para ejecutar la aplicación usando el JAR generado por shadowJar
 CMD ["java", "-jar", "build/libs/api-gateway-ms-fat.jar"]
