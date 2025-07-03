@@ -59,7 +59,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ streamUrl, isPlaying }) => {
       
       {/* Fallback cuando no hay imagen disponible */}
       {!isPlaying && !lastFrameUrl && (
-        <div className="w-full h-64 bg-gray-900 flex items-center justify-center">
+        <div className="w-full h-64 flex items-center justify-center">
           <p className="text-white">No se pudo capturar la imagen</p>
         </div>
       )}
