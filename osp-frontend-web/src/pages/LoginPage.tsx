@@ -7,8 +7,6 @@ import LoginCallback from '../components/auth/LoginCallback';
 import { SiGoogle } from 'react-icons/si'; 
 import { FaGithub } from 'react-icons/fa';
 
-const API_URL = import.meta.env.VITE_BACK_API_URL;
-
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated, error } = useAuth();
@@ -27,7 +25,7 @@ const LoginPage: React.FC = () => {
   }
 
   const handleFederatedLogin = (provider: 'google' | 'github') => {
-    window.location.href = `${API_URL}/auth/${provider}`;
+    window.location.href = `/api/auth/${provider}`;
   };
 
   return (
