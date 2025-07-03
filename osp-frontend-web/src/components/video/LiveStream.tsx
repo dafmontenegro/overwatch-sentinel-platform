@@ -34,8 +34,8 @@ const LiveStream: React.FC<Stream> = ({ cameraId }) => {
   };
 
   return (
-    <div className="flex justify-center items-center w-full h-full">
-      <div className="relative bg-black aspect-video w-full max-w-4xl">
+    <div className="flex-1 flex justify-center items-center">
+      <div className="relative w-full max-w-screen-xl flex items-center justify-center bg-black aspect-video">
         {isLoading && (
           <div className="absolute inset-0 flex justify-center items-center">
             <LoadingSpinner />

@@ -1,8 +1,10 @@
 import type { User, UserResponse } from '../types/auth.types';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 // Llama al endpoint protegido para obtener el user_id
 export const fetchUserId = async (token: string): Promise<string> => {
-  const response = await fetch(`/api/protected`, {
+  const response = await fetch(`${API_URL}/protected`, {
     method: 'GET',
     headers: { 
       'Authorization': `Bearer ${token}`,
@@ -17,7 +19,7 @@ export const fetchUserId = async (token: string): Promise<string> => {
 
 export const fetchUser = async (token: string): Promise<User> => {
   try {
-    const response = await fetch(`/api/user/me`, {
+    const response = await fetch(`${API_URL}/user/me`, {
       method: 'GET',
       headers: { 
         'Authorization': `Bearer ${token}`,
