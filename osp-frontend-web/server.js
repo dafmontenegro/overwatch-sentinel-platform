@@ -33,7 +33,7 @@ app.use(
           // allow websocket in dev:
           ...(!isProduction ? ["ws://localhost:*", "wss://localhost:*"] : []),
         ],
-        imgSrc:       ["'self'", "data:", "blob:"],
+        imgSrc:       ["'self'", "data:", "blob:", "https://avatars.githubusercontent.com", "https://lh3.googleusercontent.com"],
         fontSrc:      ["'self'", "data:"],
         workerSrc:    ["'self'", "blob:"],
         objectSrc:    ["'none'"],
