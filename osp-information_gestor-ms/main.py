@@ -19,7 +19,7 @@ print('connected to redis "{}"'.format(redis_host))
 
 # Third-party Imports
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.responses import StreamingResponse, JSONResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 import httpx
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -67,7 +67,7 @@ app.add_middleware(
 ### Raspberry Pi connection endpoints ###
 
 # Obtener URLs desde variables de entorno
-information_port = os.getenv('INFORMATION_PORT', 'http://apigateway-ms:8887/')
+information_port = os.getenv('INFORMATION_PORT', 'http://osp-raspberrypi-ms:8080/')
 LOGS_URL = os.getenv('LOGS_URL', f'{information_port}/logs')
 EVENTS_URL = os.getenv('EVENTS_URL', f'{information_port}/events')
 VIDEOS_URL = os.getenv('VIDEOS_URL', f'{information_port}/videos')

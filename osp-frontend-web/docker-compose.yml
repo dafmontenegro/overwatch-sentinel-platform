@@ -3,6 +3,7 @@ services:
     build:
       context: .
     image: osp-frontend-web:dev
+    container_name: osp-frontend-web
     env_file:
       - .env
     environment:

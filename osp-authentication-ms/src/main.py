@@ -1,6 +1,7 @@
 # Standard Library Imports
 import os
 import logging
+import socket
 from dotenv import load_dotenv
 from datetime import datetime
 
@@ -113,6 +114,7 @@ google = oauth.register(
 @app.get("/auth/google")
 async def login_google(request: Request):
     """Initiates Google OAuth2 flow"""
+    print("Se esta ejecutando en el contenedor:", socket.gethostname())
     #redirect_uri = request.url_for("auth_google_callback")  # Callback endpoint name
     redirect_uri = GOOGLE_REDIRECT_URI  # Use the configured redirect URI
     if not redirect_uri:
