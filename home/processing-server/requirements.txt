@@ -1,0 +1,5 @@
+numpy<2
+opencv-python~=4.5.3.56
+flask
+flask-cors
+werkzeug

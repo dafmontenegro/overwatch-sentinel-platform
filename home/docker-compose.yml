@@ -1,0 +1,45 @@
+services:
+  # Raspberry Pi - Solo captura y detección
+  osp-raspberrypi:
+    build:
+      context: ./raspberry-pi
+      dockerfile: Dockerfile
+    image: osp-raspberrypi
+    container_name: osp-raspberrypi
+    restart: unless-stopped
+    environment:
+      - TZ=America/Bogota
+      - PROCESSING_SERVER_HOST=osp-processing-ms
+      - PROCESSING_SERVER_PORT=8081
+    devices:
+      - /dev/video0:/dev/video0
+    privileged: true
+    networks:
+      - osp-network
+    depends_on:
+      - osp-processing-ms
+
+  # Servidor de procesamiento - Maneja UI, almacenamiento y lógica de negocio
+  osp-processing-ms:
+    build:
+      context: ./processing-server
+      dockerfile: Dockerfile
+    image: osp-processing-ms
+    container_name: osp-processing-ms
+    restart: unless-stopped
+    environment:
+      - TZ=America/Bogota
+      - RASPBERRY_PI_HOST=osp-raspberrypi
+      - RASPBERRY_PI_PORT=8080
+    ports:
+      - "8080:8080"  # Puerto para la interfaz web
+      - "8081:8081"  # Puerto para recibir datos de la raspberry
+    volumes:
+      - ./events:/app/events
+      - ./logs:/app/logs
+    networks:
+      - osp-network
+
+networks:
+  osp-network:
+    driver: bridge
