@@ -11,9 +11,7 @@ RUN ln -fs /usr/share/zoneinfo/$TZ /etc/localtime && dpkg-reconfigure -f noninte
 WORKDIR /app
 
 # Copy project files
-COPY requirements.txt .
-COPY pi_detector.py .
-COPY test.mp4 .
+COPY . .
 
 # Upgrade pip and install Python dependencies
 RUN pip install --upgrade pip

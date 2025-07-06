@@ -11,15 +11,20 @@ services:
       - TZ=America/Bogota
       - PROCESSING_SERVER_HOST=osp-processing-ms
       - PROCESSING_SERVER_PORT=8081
+      - DOCKER_CONTAINER=true
     devices:
       - /dev/video0:/dev/video0
     privileged: true
     networks:
-      - osp-network
+      osp-network:
+        ipv4_address: 172.20.0.9
+    expose:
+      - "8080"
     depends_on:
       - osp-processing-ms
+    # Sin volúmenes - todo es temporal
 
-  # Servidor de procesamiento - Maneja UI, almacenamiento y lógica de negocio
+  # Servidor de procesamiento - Maneja almacenamiento y lógica de negocio
   osp-processing-ms:
     build:
       context: ./processing-server
@@ -31,15 +36,20 @@ services:
       - TZ=America/Bogota
       - RASPBERRY_PI_HOST=osp-raspberrypi
       - RASPBERRY_PI_PORT=8080
+      - DOCKER_CONTAINER=true
     ports:
       - "8080:8080"  # Puerto para la interfaz web
       - "8081:8081"  # Puerto para recibir datos de la raspberry
-    volumes:
-      - ./events:/app/events
-      - ./logs:/app/logs
     networks:
-      - osp-network
+      osp-network:
+        ipv4_address: 172.20.0.12
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # Para acceso desde host
+    # Sin volúmenes - almacenamiento temporal en /tmp
 
 networks:
   osp-network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

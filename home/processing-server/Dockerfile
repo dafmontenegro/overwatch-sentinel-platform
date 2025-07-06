@@ -11,8 +11,7 @@ RUN ln -fs /usr/share/zoneinfo/$TZ /etc/localtime && dpkg-reconfigure -f noninte
 WORKDIR /app
 
 # Copy project files
-COPY requirements.txt .
-COPY processing_server.py .
+COPY . .
 
 # Upgrade pip and install Python dependencies
 RUN pip install --upgrade pip
