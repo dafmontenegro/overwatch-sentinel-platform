@@ -8,11 +8,11 @@ class Config:
     # Detección de objetos (para validación)
     DETECTION_SCORE_THRESHOLD = 0.3
     DETECTION_MAX_RESULTS = 3
-    DETECTION_CATEGORY_ALLOWLIST = ["person", "dog"]
+    DETECTION_CATEGORY_ALLOWLIST = ["person", "bicycle"]
     
     # Zona segura (x1, y1, x2, y2)
-    SAFE_ZONE_START = (880, 360)
-    SAFE_ZONE_END = (1280, 720)
+    SAFE_ZONE_START = (0, 0)
+    SAFE_ZONE_END = (480, 720)
     
     # Grabación de eventos
     MIN_VIDEO_DURATION = 1  # segundos mínimos para guardar video
