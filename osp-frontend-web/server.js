@@ -16,68 +16,49 @@ const templateHtml = isProduction
 const app = express()
 
 // Configure Helmet with CSP
-app.use(helmet({
-  contentSecurityPolicy: {
-    useDefaults: true,
-    directives: {
-      "script-src": [
-        "'self'",
-        "'unsafe-inline'", // Necesario para Vite en desarrollo
-        "'unsafe-eval'", // Necesario para Vite HMR en desarrollo
-        ...(isProduction ? [] : ["'unsafe-inline'", "'unsafe-eval'"]),
-      ],
-      "style-src": [
-        "'self'",
-        "'unsafe-inline'", // Necesario para estilos inline y CSS-in-JS
-        // "https://fonts.googleapis.com"
-      ],
-      "connect-src": [
-        "'self'",
-        ...(isProduction ? [] : ["ws://localhost:*", "wss://localhost:*"]),
-        // "https://api.example.com"
-      ],
-      "img-src": [
-        "'self'",
-        "data:", // Para imágenes base64
-        "blob:", // Para imágenes blob
-        // "https://images.unsplash.com"
-      ],
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      useDefaults: true,
+      directives: {
+        defaultSrc:   ["'self'"],
+        scriptSrc:    [
+          "'self'",
+          "'unsafe-inline'", // Vite HMR/dev
+          "'unsafe-eval'",
+        ],
+        styleSrc:     ["'self'", "'unsafe-inline'"],
+        connectSrc:   [
+          "'self'",
+          // allow websocket in dev:
+          ...(!isProduction ? ["ws://localhost:*", "wss://localhost:*"] : []),
+        ],
+        imgSrc:       ["'self'", "data:", "blob:", "https://avatars.githubusercontent.com", "https://lh3.googleusercontent.com"],
+        fontSrc:      ["'self'", "data:"],
+        workerSrc:    ["'self'", "blob:"],
+        objectSrc:    ["'none'"],
+        baseUri:      ["'self'"],
+        formAction:   ["'self'"],
+        frameAncestors: ["'none'"],
 
-      "font-src": [
-        "'self'",
-        "data:", // Para fuentes base64
-        // "https://fonts.gstatic.com" // Si usas Google Fonts
-      ],
-      "worker-src": [
-        "'self'",
-        "blob:"
-      ],
-      "object-src": ["'none'"],
-      "base-uri": ["'self'"],
-      "form-action": ["'self'"],
-      "frame-ancestors": ["'none'"],
-      "upgrade-insecure-requests": isProduction ? [] : undefined
+        // ← Only include this in production, and with an empty array
+        ...(isProduction && { upgradeInsecureRequests: [] })
+      },
+      reportOnly: !isProduction
     },
-    reportOnly: !isProduction,
-  },
-  
-  // Configuraciones adicionales de seguridad
-  crossOriginEmbedderPolicy: false,
-  hsts: {
-    maxAge: isProduction ? 31536000 : 0, // 1 año en producción, deshabilitado en desarrollo
-    includeSubDomains: isProduction,
-    preload: isProduction
-  },
-  
-  // Previene ataques MIME sniffing
-  noSniff: true,
-  // Previene ataques XSS
-  xssFilter: true,
-  // Controla el header Referrer
-  referrerPolicy: {
-    policy: ["same-origin"]
-  }
-}))
+
+    // rest of your Helmet config…
+    crossOriginEmbedderPolicy: false,
+    hsts: {
+      maxAge: isProduction ? 31536000 : 0,
+      includeSubDomains: isProduction,
+      preload: isProduction
+    },
+    noSniff: true,
+    xssFilter: true,
+    referrerPolicy: { policy: ['same-origin'] }
+  })
+)
 
 // Add Vite or respective production middlewares
 /** @type {import('vite').ViteDevServer | undefined} */

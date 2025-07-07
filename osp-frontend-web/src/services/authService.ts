@@ -1,6 +1,6 @@
 import type { User, UserResponse } from '../types/auth.types';
 
-const API_URL = import.meta.env.VITE_BACK_API_URL;
+const API_URL = import.meta.env.VITE_API_URL;
 
 // Llama al endpoint protegido para obtener el user_id
 export const fetchUserId = async (token: string): Promise<string> => {

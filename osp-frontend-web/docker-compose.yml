@@ -5,6 +5,7 @@ services:
     ports:
       - "5173:5173"
     image: osp-frontend-web:dev
+    container_name: osp-frontend-web
     env_file:
       - .env
     

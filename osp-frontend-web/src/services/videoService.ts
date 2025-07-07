@@ -1,6 +1,6 @@
 import type { Stream, Recording } from '../types/video.types';
 
-const API_URL = import.meta.env.VITE_BACK_API_URL;
+const API_URL = import.meta.env.VITE_API_URL;
 
 // Función para obtener la URL del stream de video
 export const getVideoStreamUrl = async (_cameraId: string): Promise<string> => {
@@ -12,7 +12,8 @@ export const getVideoStreamUrl = async (_cameraId: string): Promise<string> => {
 export const fetchAvailableCameras = async (): Promise<Stream[]> => {
   try {
     //const token = localStorage.getItem('token');
-    
+    //if (!token) throw new Error('Token no encontrado');
+
     return [
       {
         id: 'cam-1',

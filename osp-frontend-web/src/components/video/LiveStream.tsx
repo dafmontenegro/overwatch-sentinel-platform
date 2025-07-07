@@ -11,13 +11,9 @@ const LiveStream: React.FC<Stream> = ({ cameraId }) => {
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 
-  const handlePlayPause = () => {
-    setIsPlaying(!isPlaying);
-  };
+  const handlePlayPause = () => setIsPlaying(!isPlaying);
 
-  const handleMute = () => {
-    setIsMuted(!isMuted);
-  };
+  const handleMute = () => setIsMuted(!isMuted);
 
   const handleFullscreen = (element: HTMLElement | null) => {
     if (!element) return;
@@ -37,44 +33,44 @@ const LiveStream: React.FC<Stream> = ({ cameraId }) => {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64 bg-gray-100 rounded-lg">
-        <LoadingSpinner />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 bg-gray-100 rounded-lg">
-        <p className="text-red-500 mb-4">{error}</p>
-        <button 
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          onClick={() => window.location.reload()}
-        >
-          Reintentar
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex justify-center items-center w-full h-full">
-      <div className="relative bg-black aspect-video">
-        <VideoPlayer 
-          streamUrl={streamUrl} 
-          isPlaying={isPlaying}
-          isMuted={isMuted}
-        />
-        <VideoControls 
-          isPlaying={isPlaying} 
-          isMuted={isMuted} 
-          isFullscreen={isFullscreen}
-          onPlayPause={handlePlayPause}
-          onMute={handleMute}
-          onFullscreen={handleFullscreen}
-        />
+    <div className="flex-1 flex justify-center items-center">
+      <div className="relative w-full max-w-screen-xl flex items-center justify-center bg-black aspect-video">
+        {isLoading && (
+          <div className="absolute inset-0 flex justify-center items-center">
+            <LoadingSpinner />
+          </div>
+        )}
+
+        {error && (
+          <div className="absolute inset-0 flex flex-col justify-center items-center text-center p-4">
+            <p className="text-red-400 mb-4">{error}</p>
+            <button
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              onClick={() => window.location.reload()}
+            >
+              Reintentar
+            </button>
+          </div>
+        )}
+
+        {!isLoading && !error && (
+          <>
+            <VideoPlayer
+              streamUrl={streamUrl}
+              isPlaying={isPlaying}
+              isMuted={isMuted}
+            />
+            <VideoControls
+              isPlaying={isPlaying}
+              isMuted={isMuted}
+              isFullscreen={isFullscreen}
+              onPlayPause={handlePlayPause}
+              onMute={handleMute}
+              onFullscreen={handleFullscreen}
+            />
+          </>
+        )}
       </div>
     </div>
   );

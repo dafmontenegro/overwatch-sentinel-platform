@@ -1,11 +1,13 @@
 services:
-  nginx-proxy:
+  osp-nginx-proxy:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: nginx-proxy
+    image: osp-nginx-proxy:latest
+    container_name: osp-nginx-proxy
     ports:
       - "80:80"
+      - "443:443"
     networks:
       - osp-network-public
     depends_on:

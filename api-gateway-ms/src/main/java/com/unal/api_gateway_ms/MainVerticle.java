@@ -107,7 +107,7 @@ public class MainVerticle extends AbstractVerticle {
             .setConnectTimeout(5000)
             .setIdleTimeout(0)); // Desactiva timeout para streams largos
 
-        client.request(HttpMethod.GET, 80, "osp-raspberrypi-ms", "/")
+        client.request(HttpMethod.GET, 8080, "osp-raspberrypi-ms", "/")
             .onSuccess(request -> {
               request.putHeader(HttpHeaders.ACCEPT.toString(), "multipart/x-mixed-replace;boundary=frame")
                   .send()

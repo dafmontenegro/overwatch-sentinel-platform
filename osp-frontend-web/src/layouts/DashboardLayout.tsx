@@ -135,8 +135,16 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           <div className="mt-4">
             {user && (
               <div className={`flex ${isSidebarOpen ? 'items-center' : 'flex-col items-center'} text-sm`}>
-                <div className="w-8 h-8 rounded-full bg-capri flex items-center justify-center text-white font-bold">
-                  {user.email.charAt(0).toUpperCase()}
+                <div className="w-9 h-9 aspect-square flex-shrink-0 rounded-full bg-gradient-to-tr from-capri to-blue-500 flex items-center justify-center text-white font-bold shadow-lg border border-capri overflow-hidden">
+                  {user.picture ? (
+                    <img
+                      src={user.picture}
+                      alt={user.name}
+                      className="w-full h-full object-cover rounded-full"
+                    />
+                  ) : (
+                    <span className="text-lg select-none">{user.email.charAt(0).toUpperCase()}</span>
+                  )}
                 </div>
                 {isSidebarOpen && (
                   <div className="ml-3 overflow-hidden">
