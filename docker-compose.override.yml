@@ -6,14 +6,14 @@ services:
 
   osp-information-ms:
     depends_on:
-      - osp-raspberrypi-ms
+      # - osp-raspberrypi-ms
       - redis-db
 
   osp-api-gateway:
     depends_on:
       - osp-authentication-ms
       - osp-information-ms
-      - osp-raspberrypi-ms
+      # - osp-raspberrypi-ms
 
   # osp-frontend-desktop:
   #   depends_on:

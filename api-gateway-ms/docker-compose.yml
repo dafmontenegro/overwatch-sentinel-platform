@@ -12,7 +12,7 @@ services:
     depends_on:
       - osp-authentication-ms
       - osp-information-ms
-      - osp-raspberrypi-ms
+      # - osp-raspberrypi-ms
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8888/health"]
       interval: 30s
