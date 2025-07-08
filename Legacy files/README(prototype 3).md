@@ -328,26 +328,19 @@ Usando el patrón de Gatekeeper que centraliza las validaciones antes de pasar a
 **Objetivo:**
 Determinar cuántos usuarios pueden autenticarse simultáneamente sin degradación del servicio.
 
-#### Prueba Propuesta
-1. **Herramienta**: JMeter o k6.
+#### Prueba 
+1. **Herramienta**: JMeter.
 2. **Métrica clave**: 
-   - Requests exitosos (<pending) vs tasa de error.
-   - Tiempo de respuesta pending < 2s.
+   - Requests exitosos.
+   - Tiempo de respuesta pending .
 3. **Ejecución**:
-   - Incrementar usuarios gradualmente (ej: 50, 100, 200... hasta fallo).
-   - Ejemplo de script con k6:
+   - Incremento de usuarios gradualmente (ej: 50, 100, 200... hasta fallo).
 
 #### Resultados 
 
-| Usuarios Concurrentes  | Requests Exitosos  | Tiempo Respuesta Promedio (ms)| Errores              |
-|------------------------|--------------------|-------------------------------|----------------------|
-| 50     	             |  50                | 126                           | Ninguno              |
-| 200     	             |  200               | 177                           | Ninguno              |
-| 500     	             |  500               | 252                           | Ninguno              |
-| 1000     	             |  1000              | 442                           | Ninguno              |
-| 3000     	             |  1606              | 13615                         | Connection timed out |
-| 5000     	             |  1325              | 14532                         | Connection timed out |
+![Prueba múltiple](https://github.com/user-attachments/assets/7584f9f3-72f5-4313-b72c-5d54c32813ff)
 
+![Ródilla suavizada](https://github.com/user-attachments/assets/fb06ad73-deb4-4b9e-8c16-4f7ba6e9fb4b)
 
 
 #### b. Escenario: Streaming de video en vivo
@@ -360,3 +353,18 @@ Identificar el límite de espectadores concurrentes antes de colapsar.
 #### Resultados
 
 ![image](https://github.com/user-attachments/assets/5bc7ffd4-83be-4740-acd9-29fac4d13571)
+
+## Prototipo
+
+### Pasos de instalación
+
+1. Descargar el código del github del siguiente enlace: https://github.com/dafmontenegro/overwatch-sentinel-platform/tree/master
+
+2. Descarga los .env y archivos delicados que se han compartido al solicitante que estan en drive.
+
+- osp-frontend: Se encuentra un .env que deberá ir en la raíz de la carpeta 'osp-frontend-web'
+- osp-backend: Se encuentran dos carpetas con los nombres correspondientes a las rápidas .env que deberan ir en la raíz de las carpetas con los nombres 
+- certicates: Se encuentra un .key que deberá ir en la ubicación relativa 'osp-nginx-proxy\ssl'
+
+3. Deberá ubicarse en la carpeta de home y usar el comando en terminal 'docker-compose up -d --build'
+4. Devolverse a la raíz de las carpetas y hacer uso del comando en la terminal 'docker-compose up -d --build'
