@@ -38,8 +38,7 @@ Esta solución está orientada a escenarios donde se requiere supervisión efici
 ## Estructura Componente y Conector (C&C)
 ### C&C View
 
-![Components & Connectors](https://github.com/user-attachments/assets/ba33b46a-d7cc-41db-a8ab-398ecf5e2aed)
-
+![Components & Connectors](https://github.com/user-attachments/assets/73ac7544-07e7-467e-8e6c-d7fb2e1f50a6)
 
 ### Descripción de los estilos arquitectónicos utilizados
 
@@ -67,8 +66,8 @@ La arquitectura del sistema OSP se compone de tres dominios principales —Front
 
 **1. Microservicios en el Componente Raspberry Pi (Edge):** 
 
-- **osp-raspberrypi-ms:** unciona como un microservicio autónomo que ejecuta tareas de detección de objetos y gestión de video.
-
+- **osp-raspberrypi:** Funciona como un componente físico autónomo que ejecuta tareas de detección de objetos y gestión de video.
+- **osp-processing-ms:** Funciona como controlador de datos y balanceador de solicitudes a los recursos físicos.
 - **Relación:**
 
    - Envía eventos al microservicio de processing (osp-processing-ms) mediante interfaces REST con mensajes JSON.
@@ -180,7 +179,7 @@ El sistema OSP maneja cuatro capas en este caso:
 ### Descripción de elementos arquitectónicos y relaciones
 Para ser desplegado el sistema OSP tiene en consideración cinco entornos:
 
-   - Raspberrypie enviroment: Despliega tanto el componente físico como el gestor de raspberries.
+   - Raspberrypi enviroment: Despliega tanto el componente físico como el gestor de raspberries.
 
 
    - Authentication enviroment: Despliega el proceso y la base de datos de autenticación. 
@@ -368,7 +367,7 @@ Identificar el límite de espectadores concurrentes antes de colapsar.
 3. **Ejecución**:
    - Simular espectadores con:
      ```bash
-     ab -n 1000 -c 50 http://tudominio.com/api/video
+     ab -n 1000 -c 50 http://localhost/api/video
      ```
    - Monitorear ancho de banda y CPU del servidor.
 
