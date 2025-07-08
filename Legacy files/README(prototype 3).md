@@ -173,7 +173,7 @@ El sistema OSP maneja cuatro capas en este caso:
      
 ## Deployment Structure
 ### Deployment View
-![Deployment View](https://github.com/user-attachments/assets/ae1a50cc-ae84-43a1-a648-875c1351d3a2)
+![Deployment View](https://github.com/user-attachments/assets/500b27b0-68ca-4764-bf64-b610f0b1a153)
 
 
 ### Descripción de elementos arquitectónicos y relaciones
@@ -352,42 +352,11 @@ Determinar cuántos usuarios pueden autenticarse simultáneamente sin degradaci�
 
 #### b. Escenario: Streaming de video en vivo
 
-| Usuarios Concurrentes  | Requests Exitosos  | Tiempo Respuesta (p95)        | Errores |
-|------------------------|--------------------|-------------------------------|---------|
-| Por ejecutar	         |  Pendiente         |Pendiente                      | Pendiente|
+Se analiza la cantidad de usuarios que pueden acceder al mismo video al mismo tiempo. Cada usuario añadido reducia 0.7 fps de media con una desviación estandar de 0.3. Teniendo en cuenta esa información, ejecutamos una prueba 50 veces teniendo como punto de partido 12 fps estables para la raspberry pi y 24 fps para nuestro pc de pruebas. A continuación se puede visualizar el resultado de los cincuenta escenarios.
 
 **Objetivo:**
 Identificar el límite de espectadores concurrentes antes de colapsar.
 
-#### Prueba Propuesta
-1. **Herramienta**:  JMeter.
-2. **Métrica clave**:
-   - Latencia de video < 5s.
-   - Pérdida de paquetes < 1%.
-3. **Ejecución**:
-   - Simular espectadores con:
-     ```bash
-     ab -n 1000 -c 50 http://localhost/api/video
-     ```
-   - Monitorear ancho de banda y CPU del servidor.
-
 #### Resultados
 
-**Previos**
-| Usuarios Concurrentes  | Requests Exitosos  | Tiempo Respuesta (p95)        | Errores |
-|------------------------|--------------------|-------------------------------|---------|
-| Por ejecutar	         |  Pendiente         |Pendiente                       |Pendiente|
-
-**Posteriores**
-| Usuarios Concurrentes  | Requests Exitosos  | Tiempo Respuesta (p95)        | Errores |
-|------------------------|--------------------|-------------------------------|---------|
-| Por ejecutar	         |  Pendiente         |Pendiente                      | Pendiente|
-#### b. Escenario: Streaming de video en vivo
-
-### Tácticas arquitectónicas aplicadas 
-
-Pending
-
-### Patrones arquitectónicos aplicados  
-
-Pending
+![image](https://github.com/user-attachments/assets/5bc7ffd4-83be-4740-acd9-29fac4d13571)
