@@ -1,4 +1,5 @@
-# Proyecto: Prototipo 2 - Estructura arquitectónica avanzada
+# Proyecto: Prototipo 3 - Atributos de calidad, Parte 1
+
 
 # Equipo
 **Nombre:** 2B
@@ -339,18 +340,22 @@ Determinar cuántos usuarios pueden autenticarse simultáneamente sin degradaci�
 
 #### Resultados 
 
-**Previos**
-| Usuarios Concurrentes  | Requests Exitosos  | Tiempo Respuesta (promedio)   | Errores  |
-|------------------------|--------------------|-------------------------------|----------|
-| 1200     	             |  1200              |Pendiente                      | Ninguno  |
-| 340     	             |  1200              |Pendiente                      | Ninguno  |
-| 5000     	             |                    |Pendiente                      | Pendiente|
+| Usuarios Concurrentes  | Requests Exitosos  | Tiempo Respuesta Promedio (ms)| Errores              |
+|------------------------|--------------------|-------------------------------|----------------------|
+| 50     	             |  50                | 126                           | Ninguno              |
+| 200     	             |  200               | 177                           | Ninguno              |
+| 500     	             |  500               | 252                           | Ninguno              |
+| 1000     	             |  1000              | 442                           | Ninguno              |
+| 3000     	             |  1606              | 13615                         | Connection timed out |
+| 5000     	             |  1325              | 14532                         | Connection timed out |
 
-**Posteriores**
+
+
+#### b. Escenario: Streaming de video en vivo
+
 | Usuarios Concurrentes  | Requests Exitosos  | Tiempo Respuesta (p95)        | Errores |
 |------------------------|--------------------|-------------------------------|---------|
 | Por ejecutar	         |  Pendiente         |Pendiente                      | Pendiente|
-#### b. Escenario: Streaming de video en vivo
 
 **Objetivo:**
 Identificar el límite de espectadores concurrentes antes de colapsar.
