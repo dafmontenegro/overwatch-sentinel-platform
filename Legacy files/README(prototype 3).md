@@ -308,7 +308,7 @@ Usando el patrón de Gatekeeper que centraliza las validaciones antes de pasar a
 | **Segmentación de redes** | Redes Docker `internal: true`          | Aislamiento mediante namespaces de red y políticas iptables                           |
 | **Rate limiting**         | Configuración en `nginx.conf`          | Control de tráfico usando algoritmos de "leaky bucket"                                |
 | **Validación de inputs**  | Regex en Vert.x (`token.matches()`)    | Whitelisting para prevenir inyecciones                                               |
-| **Encriptación TLS**      | Certificados en Nginx                  | Cifrado AES-256-GCM y autenticación X.509                                            |
+| **Encriptación TLS**      | Certificados en Nginx                  | Cifrado RSA                                                                          |
 
 ### Patrones arquitectónicos aplicados
 
