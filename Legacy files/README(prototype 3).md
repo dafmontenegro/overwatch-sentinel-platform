@@ -338,9 +338,10 @@ Determinar cuántos usuarios pueden autenticarse simultáneamente sin degradaci�
 
 #### Resultados 
 
+![Ródilla suavizada](https://github.com/user-attachments/assets/fb06ad73-deb4-4b9e-8c16-4f7ba6e9fb4b)
+
 ![Prueba múltiple](https://github.com/user-attachments/assets/7584f9f3-72f5-4313-b72c-5d54c32813ff)
 
-![Ródilla suavizada](https://github.com/user-attachments/assets/fb06ad73-deb4-4b9e-8c16-4f7ba6e9fb4b)
 
 
 #### b. Escenario: Streaming de video en vivo
