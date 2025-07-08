@@ -17,8 +17,6 @@ include:
     project_directory: osp-information_gestor-ms/
   # - path: osp-raspberrypi-ms/docker-compose.yml
   #   project_directory: osp-raspberrypi-ms/
-  - path: home/docker-compose.yml
-    project_directory: home/
   - path: osp-nginx-proxy/docker-compose.yml
     project_directory: osp-nginx-proxy/
   - path: api-gateway-ms/docker-compose.yml

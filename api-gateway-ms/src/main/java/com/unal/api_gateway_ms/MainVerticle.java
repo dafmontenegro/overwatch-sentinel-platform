@@ -28,7 +28,7 @@ public class MainVerticle extends AbstractVerticle {
     router.route().handler(LoggerHandler.create());
 
     // Leer la URL del microservicio desde variables de entorno
-    raspberrypiServiceUrl = System.getenv().getOrDefault("RASPBERRYPI_SERVICE_URL", "http://osp-raspberrypi-ms:80");
+    raspberrypiServiceUrl = System.getenv().getOrDefault("RASPBERRYPI_SERVICE_URL", "http://osp-processing-ms:8080");
 
     // Leer la URL del servicio de autenticación desde variables de entorno
     authServiceUrl = System.getenv().getOrDefault("AUTH_SERVICE_URL", "http://osp-authentication-ms:8000");
@@ -95,7 +95,7 @@ public class MainVerticle extends AbstractVerticle {
   private void configureVideoRoute(Router router) {
     router.get("/video").handler(ctx -> {
       Promise<Void> delayPromise = Promise.promise();
-      String videoServiceUrl = raspberrypiServiceUrl + "/"; // Asegúrate de incluir
+      String videoServiceUrl = raspberrypiServiceUrl + "/stream"; // Asegúrate de incluir
       // el endpoint correcto
 
       // Espera inicial de 5 segundos
