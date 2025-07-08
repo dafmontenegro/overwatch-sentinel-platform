@@ -2,6 +2,8 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
+const MODE = import.meta.env.VITE_MODE;
+
 interface PrivateRouteProps {
   children: React.ReactNode;
 }
@@ -17,7 +19,7 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated && MODE !== 'development') {
     return <Navigate to="/" replace />;
   }
 

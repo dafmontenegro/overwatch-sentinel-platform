@@ -8,6 +8,7 @@ import { SiGoogle } from 'react-icons/si';
 import { FaGithub } from 'react-icons/fa';
 
 const API_URL = import.meta.env.VITE_API_URL;
+const MODE = import.meta.env.VITE_MODE;
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -16,7 +17,9 @@ const LoginPage: React.FC = () => {
 
   // Redirigir si ya está autenticado y no es una ruta de callback
   useEffect(() => {
-    if (isAuthenticated && !isCallbackRoute) {
+    if (MODE === 'development' && !isAuthenticated && !isCallbackRoute) {
+      // En desarrollo, redirigir a la página de live
+      localStorage.setItem('token', 'dev-token');
       navigate('/live');
     }
   }, [isAuthenticated, navigate, isCallbackRoute]);
