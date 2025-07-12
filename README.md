@@ -1,4 +1,4 @@
-# Proyecto: Prototipo 2 - Estructura arquitectónica avanzada 
+# Proyecto: Prototipo 3 - Atributos de calidad, Parte 1
 
 
 # Equipo
@@ -38,31 +38,27 @@ Esta solución está orientada a escenarios donde se requiere supervisión efici
 ## Estructura Componente y Conector (C&C)
 ### C&C View
 
-![C C](https://github.com/user-attachments/assets/0f2e3d43-78c5-4a40-b09a-f100c16bcfff)
-
-
-
-
-
+![Components & Connectors](https://github.com/user-attachments/assets/73ac7544-07e7-467e-8e6c-d7fb2e1f50a6)
 
 ### Descripción de los estilos arquitectónicos utilizados
 
-El sistema OSP (Overwatch Sentinel Platform) adopta de forma integral el estilo arquitectónico basado en microservicios, aplicado coherentemente desde el procesamiento local en dispositivos Raspberry Pi hasta los servicios del backend y la interfaz web del frontend.
+El sistema OSP (Overwatch Sentinel Platform) implementa una arquitectura de microservicios integral que abarca desde los dispositivos Raspberry Pi en el edge hasta los servicios backend y la interfaz web frontend. Esta arquitectura descompone el sistema en componentes autónomos con responsabilidades bien definidas que interactúan mediante APIs REST sobre HTTP/HTTPS.
 
 La arquitectura de microservicios implica descomponer el sistema en componentes autónomos, cada uno con una responsabilidad bien definida, que interactúan entre sí a través de interfaces ligeras (REST API sobre HTTP/HTTPS). Cada microservicio es desplegado, escalado y gestionado de forma independiente, permitiendo una mayor resiliencia, escalabilidad y facilidad de evolución del sistema.
 
 **Características clave de esta adopción:**
 
-1. Cada módulo del sistema cumple con el principio de única responsabilidad (Single Responsibility Principle), actuando como un microservicio incluso si reside en el borde (Edge).
+1. **Principio de única responsabilidad:** Cada microservicio, incluyendo los que operan en dispositivos edge como las Raspberry Pi, gestiona un dominio funcional específico. Por ejemplo, el componente osp-raspberrypi se encarga exclusivamente de la captura y procesamiento inicial de video, mientras que osp-authentication maneja únicamente la autenticación federada.
 
-2. Se fomenta el bajo acoplamiento entre servicios y la alta cohesión interna.
+2. **Comunicación segura:** Todos los microservicios se comunican mediante HTTPS con TLS 1.2+ utilizando certificados gestionados automáticamente. Las conexiones desde el frontend al navegador implementan cifrado punto a punto con perfect forward secrecy.
 
-3. Las interfaces entre microservicios están bien definidas y utilizan formatos estandarizados como JSON y HTTP REST.
+3. **Comunicación clarificada:** Las interfaces entre microservicios están bien definidas y utilizan formatos estandarizados como JSON y HTTP REST.
 
-4. Se permite la integración tecnológica heterogénea: por ejemplo, Python en Raspberry Pi, Node.js o Flask en Backend, y React en Frontend, sin afectar la interoperabilidad.
+4. **Se permite la integración tecnológica heterogénea:** por ejemplo, Python en Raspberry Pi, Node.js o Flask en Backend, y React en Frontend, sin afectar la interoperabilidad.
+
+5. **Réplica del API:** El servicio osp-api está diseñado para desplegarse en tres instancias idénticas que comparten acceso a las mismas bases de datos. Esta replicación proporciona alta disponibilidad mediante balanceo de carga implementado en osp-rightx-proxy.
 
 Esta estrategia facilita el despliegue incremental, la automatización, la resiliencia ante fallos parciales y la futura extensión del sistema con nuevos servicios (como seguimiento de objetos, análisis forense, etc.).
-
 
 ### Descripción de elementos arquitectónicos y relaciones
 
@@ -70,23 +66,31 @@ La arquitectura del sistema OSP se compone de tres dominios principales —Front
 
 **1. Microservicios en el Componente Raspberry Pi (Edge):** 
 
-- **osp-raspberrypi-ms:** Microservicio local que agrupa múltiples tareas en la Raspberry Pi, incluyendo la detección de objetos, evaluación de la zona segura, grabación de video y sincronización de datos. Expone una API REST mínima para enviar logs al backend.
-
+- **osp-raspberrypi:** Funciona como un componente físico autónomo que ejecuta tareas de detección de objetos y gestión de video.
+- **osp-processing-ms:** Funciona como controlador de datos y balanceador de solicitudes a los recursos físicos.
 - **Relación:**
 
-   - Envía eventos al backend (osp-backend-ms) mediante interfaces REST con mensajes JSON.
-
-   - Sube los videos grabados a un almacenamiento en la nube externo (representado como nube externa en el modelo).
+   - Envía eventos al microservicio de processing (osp-processing-ms) mediante interfaces REST con mensajes JSON.
 
 **2. Microservicios en el Backend**
 
-- **osp-backend-ms:** Microservicio central que recibe, valida y persiste los datos enviados por las Raspberry Pi. Internamente, realiza las siguientes funciones:
+- **osp-authentication-ms:** Microservicio que recibe, valida y persiste los datos de autenticación dada porl os usuarios. Internamente, realiza las siguientes funciones:
 
    - Gestión de autenticación federada (conexión a Google OAuth2).
+
+- **osp-information-ms:** Microservicio que recibe, valida y persite la información generada por el elemento fisico para guardarlo en bases de respaldo o de consistencia de datos.
 
    - Recepción y persistencia de logs desde los nodos Raspberry.
 
    - Generación de respuestas al frontend con datos y videos filtrados por usuario.
+ 
+   - Sube los logs videos grabados a un almacenamiento en la nube externo (representado como nube externa en el modelo).
+ 
+- **osp-processing-ms:** Microservicio necargado de reducción de tareas del componente fisico, expone el video, unico con acceso a los eventos, logs, videos y mideo en vivo dado por el dispositivo de manera directa funcionando como puente.
+
+   - Generación de respuestas al frontend con datos y videos filtrados por usuario.
+ 
+   - Sube los videos grabados a un almacenamiento en la nube externo (representado como nube externa en el modelo).
 
 - **Bases de Datos:**
 
@@ -115,10 +119,16 @@ La arquitectura del sistema OSP se compone de tres dominios principales —Front
    - Consulta segura de logs y videos asociados al usuario autenticado.
 
    - Visualización estructurada de datos en el navegador.
+ 
+- osp-app: Es una aplicación renderizada desde el lado del servidor que toma como base la estructura del componente web. Sus responsabilidades incluyen:
+
+   - Replicar las funcionalidad del frontend web
+ 
+   - No presentar puntos de acceso
 
 - **Relación:**
 
-   - Se comunica con osp-apigateway mediante HTTP autenticadas con token.
+   - Se comunica con osp-nginx-proxy mediante HTTP autenticadas con token.
 
    - Consume los endpoints protegidos expuestos por el backend.
 
@@ -126,16 +136,13 @@ La arquitectura del sistema OSP se compone de tres dominios principales —Front
 
 **Conectores y Relaciones**
 
-- Todos los microservicios se comunican a través de HTTP/HTTPS siguiendo el estilo RESTful.
+- Los microservicios se comunican a través de HTTP/HTTPS o TCP/IP siguiendo el estilo RESTful.
 
 - Se utilizan JWT (JSON Web Tokens) para validar autenticidad del usuario entre el frontend y backend.
 
-- El backend actúa como gateway para proteger y filtrar el acceso a los datos almacenados.
+- El Api Gateway actúa como relacionador entre las redes pública y privada para proteger y filtrar el acceso a los componentes y datos almacenados.
 
-- Las relaciones entre frontend y backend, así como entre backend y Raspberry, están representadas como conectores con roles bien definidos: productor, consumidor, autenticador o despachador.
-
-Este modelo garantiza el cumplimiento de los principios de microservicios: escalabilidad, independencia, despliegue individual, integración heterogénea (Python, JS, NoSQL/SQL) y separación de responsabilidades.
-
+Este modelo garantiza el cumplimiento de los principios de microservicios: escalabilidad, independencia, despliegue individual, integración heterogénea (Python, JS, NoSQL/SQL, Java, HTML) y separación de responsabilidades.
 
 ## Layered Structure
 ### Layered View
@@ -164,25 +171,22 @@ El sistema OSP maneja cuatro capas en este caso:
      
    - La página de transmisiones en vivo muestra la captura del componente físico siendo procesada por el sistema y recogiendo la información desde una base de datos separada.
      
-  
-
-
 ## Deployment Structure
 ### Deployment View
-![Deployment view](https://github.com/user-attachments/assets/1d88de83-aa02-4565-bed2-64739e271fb5)
-
-
-
+![Deployment View](https://github.com/user-attachments/assets/500b27b0-68ca-4764-bf64-b610f0b1a153)
 
 
 ### Descripción de elementos arquitectónicos y relaciones
 Para ser desplegado el sistema OSP tiene en consideración cinco entornos:
 
+   - Raspberrypi enviroment: Despliega tanto el componente físico como el gestor de raspberries.
+
+
    - Authentication enviroment: Despliega el proceso y la base de datos de autenticación. 
      
    - Information enviroment: Despliega el gestor de información asi como las bases de datos respectivas. 
 
-   - Raspberrypie enviroment: Despliega tanto el componente físico como el gestor de raspberries.
+   - Proxy enviroment: Despliega el proxy que sirve también como balanceador de carga.
 
    - Frontend enviroment: Depliega el componente de frontend.
 
@@ -213,218 +217,161 @@ El sistema OSP trabaja con 4 elementos actualmente según las funciones que real
    Las imagenes generadas por los componentes físicos son procesadas para que puedan ser vistas o guardadas según sea necesario.
 
    Todos los datos necesarios se guardan en bases de datos para garantizar permanencia e integridad. 
-   
-# Proyecto: Prototipo 2 - Estructura arquitectónica avanzada 
 
+# Atributos de calidad
 
-# Equipo
-**Nombre:** 2B
+## Atributos de calidad de Seguridad
 
-**Integrantes:** 
+### Escenarios de seguridad
 
-- Santiago Barrera Berrio
-- Cristian Alejandro Beltran Rojas
-- Daniel Felipe Montenegro Herrera
-- Breyner Ismael Ciro Otero
-- Juan Felipe Fontecha Vasquez
-- Miguelangel Mosquera
+#### a. Escenario: Ataques de acceso no autorizado a microservicios
 
-# Repositorio
+#### Amenaza 
 
-https://github.com/dafmontenegro/overwatch-sentinel-platform/tree/master
+En arquitecturas de microservicios, si un atacante compromete un contenedor (ej: mediante una vulnerabilidad en la API Gateway), puede intentar propagarse a otros servicios mediante conexiones no restringidas.
+Su impacto es la pérdida de confidencialidad (datos robados), escalamiento de privilegios o denegación de servicio.
 
-# Sistema de Software
+#### Solución: Segmentación de redes con Docker
 
-**Nombre del Software:** OSP - Overwatch Sentinel Platform
+- **Táctica**: Aislamiento de redes en `docker-compose.yml`
+  - **Red pública**: Frontend y Nginx.
+  - **Red privada (`internal: true`)**: Microservicios y bases de datos.
+  - El API Gateway tiene acceso a ambas redes.
+ 
+![image](https://github.com/user-attachments/assets/af777860-dac4-44cd-b5ed-ee8192f8a048)
 
-**Logo:** 
+**Por qué funciona**
 
-![Logo-CapriBlue](https://github.com/user-attachments/assets/4e00fde1-3738-4922-8777-0c1bc1cc4965)
+Docker bloquea el tráfico no autorizado entre redes usando iptables.
 
+Ejemplo: Desde un contenedor en la red pública, no se puede acceder directamente a un microservicio
 
-**Descripción:** OSP (Overwatch Sentinel Platform) es una plataforma de software para la vigilancia automatizada basada en visión por computadora, diseñada para funcionar sobre hardware de bajo consumo como Raspberry Pi. Utiliza la implementación [pi-tensorflow-lite-object-detection](https://github.com/dafmontenegro/pi-tensorflow-lite-object-detection), la cual permite detectar objetos definidos previamente dentro del campo visual de la cámara.
+#### b. Escenario: Ataque de denegación de servicios (DoS)
 
-El sistema permite configurar un área específica dentro de la imagen —conocida como zona segura— que delimita el espacio de vigilancia. Cuando un objeto de interés entra en dicha zona, el sistema activa automáticamente la grabación de video. De este modo, se optimiza el uso de recursos, ya que solo se almacena material cuando se detecta actividad relevante.
+#### Amenaza
 
-Esta solución está orientada a escenarios donde se requiere supervisión eficiente y automática, con un diseño modular que permitirá, en futuras fases, incluir funcionalidades adicionales como el seguimiento (tracking) y el monitoreo continuo de objetos.
+Endpoints como /api/auth/google o /api/video están expuestos y podrían ser objetivo de fuerza bruta, scanning automatizado o inyecciones.
 
+#### Solución: Proxy reverso (Nginx)
 
-# Estructuras Arquitectonicas
+Las tacticas usadas son el "rate limiting" que limita las solicitudes por IP (limit_req_zone en nginx.conf). Y, además Headers de seguridad: X-Frame-Options, Content-Security-Policy también ubicado en el archivo mencionado `nginx.conf`.
 
-## Estructura Componente y Conector (C&C)
-### C&C View
+![image](https://github.com/user-attachments/assets/06c67610-d91c-4556-b0d0-defece5609fa)
 
-![C C](https://github.com/user-attachments/assets/0f2e3d43-78c5-4a40-b09a-f100c16bcfff)
+**Por qué funciona**
 
+- Nginx actúa como un filtro:
+  - Oculta la estructura interna (los microservicios no son accesibles directamente desde internet).
+  - Bloquea tráfico malicioso (ej: demasiadas solicitudes consecutivas).
 
+#### c. Escenario: Interceptación de datos (Man-in-the-Middle)
 
+#### Amenaza
 
+El tráfico entre el frontend y el cliente viaja en HTTP (sin encriptar), lo que permite interceptación de datos (credenciales, tokens).
 
+#### Solución: Canal de comunicación seguro (HTTPS/TLS).
 
-### Descripción de los estilos arquitectónicos utilizados
+- Configuración:
+  - Certificado TLS en Nginx (a implementar).
+  - Redirección automática de HTTP a HTTPS.
 
-El sistema OSP (Overwatch Sentinel Platform) adopta de forma integral el estilo arquitectónico basado en microservicios, aplicado coherentemente desde el procesamiento local en dispositivos Raspberry Pi hasta los servicios del backend y la interfaz web del frontend.
+![image](https://github.com/user-attachments/assets/e606bae7-e045-4b8d-b1d3-8978818eb767)
 
-La arquitectura de microservicios implica descomponer el sistema en componentes autónomos, cada uno con una responsabilidad bien definida, que interactúan entre sí a través de interfaces ligeras (REST API sobre HTTP/HTTPS). Cada microservicio es desplegado, escalado y gestionado de forma independiente, permitiendo una mayor resiliencia, escalabilidad y facilidad de evolución del sistema.
+**Por qué funciona**
 
-**Características clave de esta adopción:**
+- Encripta los datos en tránsito usando TLS.
+- Autentica el servidor, evitando ataques de suplantación (MitM).
 
-1. Cada módulo del sistema cumple con el principio de única responsabilidad (Single Responsibility Principle), actuando como un microservicio incluso si reside en el borde (Edge).
+#### d. Ataque de inyección (SQL, XSS) en microservicios
 
-2. Se fomenta el bajo acoplamiento entre servicios y la alta cohesión interna.
+#### Amenaza
 
-3. Las interfaces entre microservicios están bien definidas y utilizan formatos estandarizados como JSON y HTTP REST.
+El API Gateway construido con Vert.x procesa solicitudes que podrían contener código malicioso (SQLi, XSS) antes de redirigirlas a los microservicios.
 
-4. Se permite la integración tecnológica heterogénea: por ejemplo, Python en Raspberry Pi, Node.js o Flask en Backend, y React en Frontend, sin afectar la interoperabilidad.
+#### Solución: Validación de entradas
 
-Esta estrategia facilita el despliegue incremental, la automatización, la resiliencia ante fallos parciales y la futura extensión del sistema con nuevos servicios (como seguimiento de objetos, análisis forense, etc.).
+Usando el patrón de Gatekeeper que centraliza las validaciones antes de pasar al backend pueden ponerse condicionales que validen que la información sea como se espera que debe ser y así evitar inyecciones de código malicioso
 
+![image](https://github.com/user-attachments/assets/70690227-3422-46fc-9b36-cccfdb09ab06)
 
-### Descripción de elementos arquitectónicos y relaciones
+**Por qué funciona**
 
-La arquitectura del sistema OSP se compone de tres dominios principales —Frontend, Backend y Raspberry Pi (Edge)—, cada uno diseñado como una colección de microservicios independientes que se comunican mediante interfaces RESTful sobre HTTPS. A continuación se describen los elementos arquitectónicos y sus relaciones:
+- Whitelisting: Solo acepta caracteres alfanuméricos, bloqueando scripts o SQL malicioso.
 
-**1. Microservicios en el Componente Raspberry Pi (Edge):** 
+- Centralización: Evita duplicar validaciones en cada microservicio.
 
-- **osp-raspberrypi-ms:** Microservicio local que agrupa múltiples tareas en la Raspberry Pi, incluyendo la detección de objetos, evaluación de la zona segura, grabación de video y sincronización de datos. Expone una API REST mínima para enviar logs al backend.
+### Tácticas arquitectónicas aplicadas 
 
-- **Relación:**
+| Táctica                  | Implementación                          | Fundamentación Técnica                                                                 |
+|--------------------------|----------------------------------------|---------------------------------------------------------------------------------------|
+| **Segmentación de redes** | Redes Docker `internal: true`          | Aislamiento mediante namespaces de red y políticas iptables                           |
+| **Rate limiting**         | Configuración en `nginx.conf`          | Control de tráfico usando algoritmos de "leaky bucket"                                |
+| **Validación de inputs**  | Regex en Vert.x (`token.matches()`)    | Whitelisting para prevenir inyecciones                                               |
+| **Encriptación TLS**      | Certificados en Nginx                  | Cifrado AES-256-GCM y autenticación X.509                                            |
 
-   - Envía eventos al backend (osp-backend-ms) mediante interfaces REST con mensajes JSON.
+### Patrones arquitectónicos aplicados
 
-   - Sube los videos grabados a un almacenamiento en la nube externo (representado como nube externa en el modelo).
+| Patrón                   | Componente               | Propósito                                                                             |
+|--------------------------|--------------------------|---------------------------------------------------------------------------------------|
+| **Reverse Proxy**        | Nginx                    | Ocultar topología interna y filtrar tráfico                                           |
+| **Gatekeeper**           | API Gateway (Vert.x)     | Centralizar validaciones de seguridad                                                 |
+| **Secure Communication** | HTTPS/TLS                | Proteger datos en tránsito                                                            |
+| **Microsegmentation**    | Redes Docker             | Limitar movimiento lateral entre servicios                                           |
 
-**2. Microservicios en el Backend**
+## Atributos de calidad de rendimiento y escalabilidad
 
-- **osp-backend-ms:** Microservicio central que recibe, valida y persiste los datos enviados por las Raspberry Pi. Internamente, realiza las siguientes funciones:
+### Escenarios de rendimiento
 
-   - Gestión de autenticación federada (conexión a Google OAuth2).
+#### a. Escenario: Concurrencia de usuarios en plataforma web
 
-   - Recepción y persistencia de logs desde los nodos Raspberry.
+**Objetivo:**
+Determinar cuántos usuarios pueden autenticarse simultáneamente sin degradación del servicio.
 
-   - Generación de respuestas al frontend con datos y videos filtrados por usuario.
+#### Prueba 
+1. **Herramienta**: JMeter.
+2. **Métrica clave**: 
+   - Requests exitosos.
+   - Tiempo de respuesta pending .
+3. **Ejecución**:
+   - Incremento de usuarios gradualmente (ej: 50, 100, 200... hasta fallo).
 
-- **Bases de Datos:**
+#### Resultados 
 
-   - **PostgreSQL:** Almacena usuarios, permisos, metadatos de videos, y configuración del sistema.
+![Ródilla suavizada](https://github.com/user-attachments/assets/fb06ad73-deb4-4b9e-8c16-4f7ba6e9fb4b)
+Prueba unitaria
 
-   - **MongoDB:** Almacena los logs generados por los dispositivos en formato JSON.
+![Prueba múltiple](https://github.com/user-attachments/assets/7584f9f3-72f5-4313-b72c-5d54c32813ff)
+Prueba múltiple
 
-   - **auth_db:** Contiene tokens, sesiones y credenciales de acceso autenticadas.
 
-   - **logs_db:** Esquema especializado para búsquedas de eventos históricos.
+#### b. Escenario: Streaming de video en vivo
 
-- **Relación:**
+Se analiza la cantidad de usuarios que pueden acceder al mismo video al mismo tiempo. Cada usuario añadido reducia 0.7 fps de media con una desviación estandar de 0.3. Teniendo en cuenta esa información, ejecutamos una prueba 50 veces teniendo como punto de partido 12 fps estables para la raspberry pi y 24 fps para nuestro pc de pruebas. A continuación se puede visualizar el resultado de los cincuenta escenarios.
 
-   - Conecta bidireccionalmente con osp-apigateway mediante HTTP para recibir datos.
+**Objetivo:**
+Identificar el límite de espectadores concurrentes antes de colapsar.
 
-   - Autentica usuarios con Google OAuth2.
+#### Resultados
 
-   - Responde al frontend con los datos filtrados según token de usuario.
+![image](https://github.com/user-attachments/assets/5bc7ffd4-83be-4740-acd9-29fac4d13571)
 
-**3. Microservicio en el Frontend**
+## Prototipo
 
-- osp-frontend-web: SPA (Single Page Application) ejecutada en navegador, desarrollada como microservicio independiente. Sus responsabilidades incluyen:
+### Pasos de instalación
 
-   - Interfaz de login con autenticación federada (Google OAuth2).
+1. Descargar el código del github del siguiente enlace: https://github.com/dafmontenegro/overwatch-sentinel-platform/tree/master
 
-   - Consulta segura de logs y videos asociados al usuario autenticado.
+2. Descarga los .env y archivos delicados que se han compartido al solicitante que estan en drive.
 
-   - Visualización estructurada de datos en el navegador.
+- osp-frontend: Se encuentra un .env que deberá ir en la raíz de la carpeta 'osp-frontend-web'
+- osp-backend: Se encuentran dos carpetas con los nombres correspondientes a las rápidas .env que deberan ir en la raíz de las carpetas con los nombres 
+- certicates: Se encuentra un .key que deberá ir en la ubicación relativa 'osp-nginx-proxy\ssl'
 
-- **Relación:**
+3. Deberá ubicarse en la carpeta de home y usar el comando en terminal 'docker-compose up -d --build'
+4. Devolverse a la raíz de las carpetas y hacer uso del comando en la terminal 'docker-compose up -d --build'
 
-   - Se comunica con osp-apigateway mediante HTTP autenticadas con token.
 
-   - Consume los endpoints protegidos expuestos por el backend.
-
-   - Representa visualmente los datos y videos asociados al usuario.
-
-**Conectores y Relaciones**
-
-- Todos los microservicios se comunican a través de HTTP/HTTPS siguiendo el estilo RESTful.
-
-- Se utilizan JWT (JSON Web Tokens) para validar autenticidad del usuario entre el frontend y backend.
-
-- El backend actúa como gateway para proteger y filtrar el acceso a los datos almacenados.
-
-- Las relaciones entre frontend y backend, así como entre backend y Raspberry, están representadas como conectores con roles bien definidos: productor, consumidor, autenticador o despachador.
-
-Este modelo garantiza el cumplimiento de los principios de microservicios: escalabilidad, independencia, despliegue individual, integración heterogénea (Python, JS, NoSQL/SQL) y separación de responsabilidades.
-
-
-## Layered Structure
-### Layered View
- ![2fbc5179-06c2-4fc0-b18b-06e20dcdb9bd](https://github.com/user-attachments/assets/da45d63c-3465-4dc2-902e-e68696e1b6cc)
-
-### Descripción de elementos arquitectónicos y relaciones
-
-El sistema OSP maneja cuatro capas en este caso: 
-
-   - Una capa de presentación que muestra las diferentes páginas que el usuario observa y usa para interactuar, siendo estas:
-      - Home page
-      - Login page
-      - Account page
-
-   - Una capa de servicios que describe las peticiones del usuario para autenticarse, revisar el livestream o pedir información.
-       
-   - Una capa de negocios donde se realiza el proceso de autenticación de cuentas, la captura del livestream o la generacion de videos y logs.
-     
-   - Una capa de datos que maneja bases de datos para la información de autenticación, los videos, los logs y los respaldos.
-
-  **Relaciones:**
-
-   - La página de acceso muestra la información del sistema y permite ir a la sección de autenticación.
-  
-   - La página de acceso requiere del proceso de autenticación para llevar al usuario a su cuenta o mostrar un error, este proceso se realiza validando la información presente en la base de datos de autenticación.
-     
-   - La página de transmisiones en vivo muestra la captura del componente físico siendo procesada por el sistema y recogiendo la información desde una base de datos separada.
-     
-  
-
-
-## Deployment Structure
-### Deployment View
-![Deployment view](https://github.com/user-attachments/assets/1d88de83-aa02-4565-bed2-64739e271fb5)
-
-
-
-
-
-### Descripción de elementos arquitectónicos y relaciones
-Para ser desplegado el sistema OSP tiene en consideración cinco entornos:
-
-   - Authentication enviroment: Despliega el proceso y la base de datos de autenticación. 
-     
-   - Information enviroment: Despliega el gestor de información asi como las bases de datos respectivas. 
-
-   - Raspberrypie enviroment: Despliega tanto el componente físico como el gestor de raspberries.
-
-   - Frontend enviroment: Depliega el componente de frontend.
-
-   - Apigateway enviroment: Despliega el apigateway asi como conecta los demás ambientes.
-     
-
-## Decomposition Structure
-### Decomposition View
-![Decomposition structure](https://github.com/user-attachments/assets/ca1c845a-ea39-4183-9966-1ead49c842db)
-
-
-### Descripción de elementos arquitectónicos y relaciones
-El sistema OSP trabaja con 4 elementos actualmente según las funciones que realiza:
-   - Visualización
-
-   - Autenticación
-
-   - Procesamiento de imagenes
-
-   - Almacenamiento de datos
-
-   **Relaciones:**
-   
-   Se tiene la presentación de las diferentes páginas para que el usuario interactue o realice peticiones al sistema.
-   
-   Hay un proceso para la autenticación para todos los usuarios comprobando la información presente.
 
    Las imagenes generadas por los componentes físicos son procesadas para que puedan ser vistas o guardadas según sea necesario.
 

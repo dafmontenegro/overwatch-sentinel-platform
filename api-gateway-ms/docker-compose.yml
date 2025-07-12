@@ -6,7 +6,7 @@ services:
     environment:
       - TZ=America/Bogota
       - INFORMATION_SERVICE_URL=http://osp-information-ms:8001
-      - RASPBERRYPI_SERVICE_URL=http://osp-raspberrypi-ms:80
+      - RASPBERRYPI_SERVICE_URL=http://host.docker.internal:8081
       - AUTH_SERVICE_URL=http://osp-authentication-ms:8000
       - REDIS_URL=redis://redis-db:6379
     ports:
@@ -14,7 +14,7 @@ services:
     depends_on:
       - osp-authentication-ms
       - osp-information-ms
-      - osp-raspberrypi-ms
+      # - osp-raspberrypi-ms
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8887/health"]
       interval: 30s
