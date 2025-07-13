@@ -12,6 +12,7 @@ COPY gradle ./gradle
 COPY src ./src
 
 # Construye la aplicación (generará un JAR con el nombre correcto)
+RUN apt-get update && apt-get install -y unzip
 RUN chmod +x gradlew
 RUN ./gradlew clean shadowJar
 

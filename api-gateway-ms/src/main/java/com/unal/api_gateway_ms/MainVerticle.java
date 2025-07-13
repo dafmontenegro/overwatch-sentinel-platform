@@ -10,22 +10,43 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.LoggerHandler;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.core.http.HttpHeaders;
+import io.vertx.ext.web.RoutingContext;
 
 public class MainVerticle extends AbstractVerticle {
+
+  private void startHttpServer(Promise<Void> startPromise) {
+    Router router = Router.router(vertx);
+
+    // Rutas de autenticación → proxy al microservicio FastAPI
+    router.route("/api/auth/*").handler(ctx -> {
+      String path = ctx.request().path().replaceFirst("/api", ""); // /auth/google, etc.
+      proxyToAuthService(ctx, path);
+    });
+
+    // Rutas locales del Gateway (no autenticación)
+    router.get("/api/users").handler(ctx -> ctx.response().end("Users route"));
+    router.post("/api/session").handler(ctx -> ctx.response().end("Session route"));
+    router.get("/health").handler(ctx -> ctx.response().end("OK"));
+  }
 
   private String raspberrypiServiceUrl;
   private WebClient webClient;
   private HttpClient httpClient;
   private String authServiceUrl;
+  private HttpClient client;
 
   @Override
   public void start(Promise<Void> startPromise) throws Exception {
     // Inicializar clientes HTTP
+    startHttpServer(startPromise);
     this.webClient = WebClient.create(vertx);
+    client = vertx.createHttpClient();
     this.httpClient = vertx.createHttpClient();
 
     Router router = Router.router(vertx);
     router.route().handler(LoggerHandler.create());
+
+    router.get("/health").handler(ctx -> ctx.response().end("OK"));
 
     // Leer la URL del microservicio desde variables de entorno
     raspberrypiServiceUrl = System.getenv().getOrDefault("RASPBERRYPI_SERVICE_URL", "http://host.docker.internal:8081");
@@ -41,8 +62,54 @@ public class MainVerticle extends AbstractVerticle {
     configureRootRoute(router);
     configureAuthRoutes(router);
 
-    // Iniciar servidor HTTP
-    startHttpServer(router, startPromise);
+    
+
+    // 🔁 Proxy para GitHub callback
+    router.route(HttpMethod.GET, "/api/auth/github/callback").handler(ctx -> {
+      proxyToAuthService(ctx, "/auth/github/callback");
+    });
+
+    // 🔁 Proxy para Google callback
+    router.route(HttpMethod.GET, "/api/auth/google/callback").handler(ctx -> {
+      proxyToAuthService(ctx, "/auth/google/callback");
+    });
+
+    vertx.createHttpServer()
+        .requestHandler(router)
+        .listen(8887, http -> {
+          if (http.succeeded()) {
+            System.out.println("🚀 API Gateway started on http://localhost:8887");
+            startPromise.complete();
+          } else {
+            startPromise.fail(http.cause());
+          }
+        });
+  }
+
+  
+
+  private void proxyToAuthService(RoutingContext ctx, String targetPath) {
+    String query = ctx.request().query();
+    String fullPath = targetPath + (query != null ? "?" + query : "");
+
+    client.request(HttpMethod.GET, 8000, "osp-authentication-ms", fullPath)
+        .onSuccess(req -> {
+          req.headers().setAll(ctx.request().headers());
+          req.send()
+              .onSuccess(res -> {
+                ctx.response().setStatusCode(res.statusCode());
+                ctx.response().headers().setAll(res.headers());
+                res.body().onSuccess(body -> ctx.response().end(body));
+              })
+              .onFailure(err -> {
+                err.printStackTrace();
+                ctx.fail(500, err);
+              });
+        })
+        .onFailure(err -> {
+          err.printStackTrace();
+          ctx.fail(500, err);
+        });
   }
 
   private void configureAuthRoutes(Router router) { // <-- Añade 'void'
@@ -95,7 +162,8 @@ public class MainVerticle extends AbstractVerticle {
   private void configureVideoRoute(Router router) {
     router.get("/video").handler(ctx -> {
       Promise<Void> delayPromise = Promise.promise();
-      //String videoServiceUrl = raspberrypiServiceUrl + "/stream"; // Asegúrate de incluir
+      // String videoServiceUrl = raspberrypiServiceUrl + "/stream"; // Asegúrate de
+      // incluir
       // el endpoint correcto
 
       // Espera inicial de 5 segundos
@@ -197,19 +265,6 @@ public class MainVerticle extends AbstractVerticle {
           .putHeader("content-type", "text/plain")
           .end("API Gateway funcionando");
     });
-  }
-
-  private void startHttpServer(Router router, Promise<Void> startPromise) {
-    vertx.createHttpServer()
-        .requestHandler(router)
-        .listen(8887, http -> {
-          if (http.succeeded()) {
-            startPromise.complete();
-            System.out.println("HTTP server started on port 8887");
-          } else {
-            startPromise.fail(http.cause());
-          }
-        });
   }
 
   @Override
