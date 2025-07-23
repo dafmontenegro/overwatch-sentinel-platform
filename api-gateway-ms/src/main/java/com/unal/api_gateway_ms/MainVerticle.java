@@ -56,6 +56,7 @@ public class MainVerticle extends AbstractVerticle {
 
     // Configuración de rutas
     configureVideoRoute(router);
+    configureVideoRoutes(router);
     configureLogsRoute(router);
     configureEventsRoute(router);
     configurePlayRoute(router);
@@ -208,6 +209,57 @@ public class MainVerticle extends AbstractVerticle {
               client.close();
             });
       });
+    });
+  }
+
+  # Logica para varias cámaras en vivo esperando lo prometido para Home
+  private void configureVideoRoutes(Router router) {
+    router.get("/video*").handler(ctx -> {
+      String path = ctx.normalizedPath(); // Ej: /video, /video2, /video3
+      String streamEndpoint;
+
+      // Mapear /video -> /stream, /video2 -> /stream2, etc.
+      if (path.equals("/video")) {
+        streamEndpoint = "/stream";
+      } else {
+        streamEndpoint = "/stream" + path.replace("/video", "");
+      }
+
+      HttpClient client = vertx.createHttpClient(new HttpClientOptions()
+          .setConnectTimeout(5000)
+          .setIdleTimeout(0)); // Sin timeout para streaming
+
+      client.request(HttpMethod.GET, 8081, "host.docker.internal", streamEndpoint)
+          .onSuccess(request -> {
+            request
+                .putHeader(HttpHeaders.ACCEPT.toString(), "multipart/x-mixed-replace;boundary=frame")
+                .send()
+                .onSuccess(response -> {
+                  ctx.response()
+                      .setChunked(true)
+                      .putHeader(HttpHeaders.CONTENT_TYPE.toString(),
+                          response.getHeader(HttpHeaders.CONTENT_TYPE.toString()))
+                      .putHeader(HttpHeaders.CACHE_CONTROL.toString(), "no-cache")
+                      .putHeader(HttpHeaders.CONNECTION.toString(), "close");
+
+                  response.pipeTo(ctx.response()).onComplete(ar -> {
+                    client.close();
+                    if (ar.failed() && !ctx.response().ended()) {
+                      ctx.fail(500, ar.cause());
+                    }
+                  });
+                })
+                .onFailure(err -> {
+                  client.close();
+                  ctx.response().setStatusCode(502)
+                      .end("Error obteniendo stream: " + err.getMessage());
+                });
+          })
+          .onFailure(err -> {
+            client.close();
+            ctx.response().setStatusCode(503)
+                .end("Servicio de video no disponible");
+          });
     });
   }
 
