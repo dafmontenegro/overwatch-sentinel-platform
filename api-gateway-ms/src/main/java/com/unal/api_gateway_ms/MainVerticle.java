@@ -61,6 +61,7 @@ public class MainVerticle extends AbstractVerticle {
     configurePlayRoute(router);
     configureRootRoute(router);
     configureAuthRoutes(router);
+    videoslist(router);
 
     
 
@@ -162,9 +163,6 @@ public class MainVerticle extends AbstractVerticle {
   private void configureVideoRoute(Router router) {
     router.get("/video").handler(ctx -> {
       Promise<Void> delayPromise = Promise.promise();
-      // String videoServiceUrl = raspberrypiServiceUrl + "/stream"; // Asegúrate de
-      // incluir
-      // el endpoint correcto
 
       // Espera inicial de 5 segundos
       vertx.setTimer(5000, timerId -> delayPromise.complete());
@@ -210,6 +208,48 @@ public class MainVerticle extends AbstractVerticle {
               client.close();
             });
       });
+    });
+  }
+
+  # Muestra lista de videos para que se sepa hacer la consulta posteriormente
+  private void videoslist(Router router){
+    router.get("/videos").handler(ctx -> {
+      HttpClient client = vertx.createHttpClient();
+
+      client.request(HttpMethod.GET, 8080, "host.docker.internal", "/events")
+        .compose(req -> req.send())
+        .onSuccess(response -> {
+          response.body().onSuccess(body -> {
+            ctx.response()
+              .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+              .end(body);
+          });
+        })
+        .onFailure(err -> {
+          ctx.response().setStatusCode(502).end("Error al consultar eventos: " + err.getMessage());
+        });
+    });
+  }
+
+  # Muestra el video especifico consultado
+  private void recorderreproducer(Router router){
+    router.get("/videos/:path").handler(ctx -> {
+      String pathParam = ctx.pathParam("path"); // Codificado como July23%2F21hr%2FJuly23_21hr_35min17sec.avi
+      String videoPath = java.net.URLDecoder.decode(pathParam, StandardCharsets.UTF_8);
+
+      HttpClient client = vertx.createHttpClient();
+
+      client.request(HttpMethod.GET, 8080, "host.docker.internal", "/video/" + videoPath)
+        .compose(req -> req.send())
+        .onSuccess(response -> {
+          ctx.response()
+            .putHeader(HttpHeaders.CONTENT_TYPE, "video/x-msvideo")
+            .setChunked(true);
+          response.pipeTo(ctx.response());
+        })
+        .onFailure(err -> {
+          ctx.response().setStatusCode(502).end("Error al obtener video: " + err.getMessage());
+        });
     });
   }
 
