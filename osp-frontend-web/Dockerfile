@@ -54,12 +54,10 @@ RUN npm ci --only=production && npm cache clean --force
 RUN chown -R nextjs:nodejs /app
 USER nextjs
 
-# Exponer puerto
-EXPOSE 5173
-
-# Variables de entorno
+# Cloud Run inyecta la variable PORT automáticamente
 ENV NODE_ENV=production
 ENV PORT=5173
+EXPOSE $PORT
 
 # Comando para iniciar la aplicación
 CMD ["node", "server.js"]

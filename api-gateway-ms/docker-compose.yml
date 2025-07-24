@@ -2,15 +2,12 @@ services:
   osp-api-gateway:
     build:
       context: .
-    container_name: osp-api-gateway
     environment:
       - TZ=America/Bogota
       - INFORMATION_SERVICE_URL=http://osp-information-ms:8001
       - RASPBERRYPI_SERVICE_URL=http://host.docker.internal:8081
       - AUTH_SERVICE_URL=http://osp-authentication-ms:8000
       - REDIS_URL=redis://redis-db:6379
-    ports:
-      - "8887:8887"
     depends_on:
       - osp-authentication-ms
       - osp-information-ms
@@ -23,5 +20,7 @@ services:
     networks:
       - osp-network-public
       - osp-network-priv
+    deploy:
+      replicas: 3
 
     restart: unless-stopped

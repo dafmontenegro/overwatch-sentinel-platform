@@ -4,6 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
     image: osp-authentication-ms:dev
+    container_name: osp-authentication-ms
     env_file:
       - .env
     restart: unless-stopped
@@ -18,8 +19,6 @@ services:
     networks:
       - osp-network-priv
       - osp-network-public
-    deploy:
-      replicas: 3
 
   postgres-db:
     image: postgres:13-alpine

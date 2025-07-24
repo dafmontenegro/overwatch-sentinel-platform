@@ -52,3 +52,14 @@ export const fetchRecordingsByDate = async (date: Date): Promise<Recording[]> =>
     throw error;
   }
 };
+
+export const fetchRecordingEvents = async (): Promise<any> => {
+  try {
+    const res = await fetch(`${API_URL}/events`);
+    if (!res.ok) throw new Error('Error al obtener grabaciones');
+    return await res.json();
+  } catch (error) {
+    console.error('Error fetching recording events:', error);
+    throw error;
+  }
+};

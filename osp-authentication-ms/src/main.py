@@ -96,6 +96,15 @@ async def startup():
                 logger.error("Failed to connect to database after multiple attempts")
                 raise
 
+# Database dependency
+async def get_db():
+    """Provides an async database session"""
+    async with AsyncSession(engine) as db:
+        try:
+            yield db
+        finally:
+            await db.close()
+
 # OAuth configuration
 config = Config('.env')
 oauth = OAuth(config)
@@ -120,15 +129,6 @@ async def login_google(request: Request):
     if not redirect_uri:
         raise HTTPException(status_code=500, detail="Google redirect URI not configured")
     return await google.authorize_redirect(request, redirect_uri)
-
-# Database dependency
-def get_db():
-    """Provides an async database session"""
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 # Google OAuth callback handler
 @app.get("/auth/google/callback")

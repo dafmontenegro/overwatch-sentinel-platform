@@ -6,6 +6,7 @@ import LiveVideoPage from '../pages/LiveVideoPage';
 import PrivateRoute from './PrivateRoute';
 import PublicRoute from './PublicRoute';
 import LoginRoute from './LoginRoute';
+import RecordingsPage from '../pages/RecordingsPage';
 
 const AppRoutes: React.FC = () => {
   return (
@@ -34,6 +35,14 @@ const AppRoutes: React.FC = () => {
         element={
           <PrivateRoute>
             <LiveVideoPage />
+          </PrivateRoute>
+        } 
+      />
+      <Route 
+        path="/recordings" 
+        element={
+          <PrivateRoute>
+            <RecordingsPage />
           </PrivateRoute>
         } 
       />

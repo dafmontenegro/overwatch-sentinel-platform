@@ -75,7 +75,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                 {isSidebarOpen && <span className="ml-3">Video en Vivo</span>}
               </Link>
             </li>
-            {/* <li>
+            <li>
               <Link
                 to="/recordings"
                 className={`flex items-center p-2 rounded-md ${
@@ -89,7 +89,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                 </svg>
                 {isSidebarOpen && <span className="ml-3">Grabaciones</span>}
               </Link>
-            </li> */}
+            </li>
             {/* <li>
               <Link
                 to="/settings"
