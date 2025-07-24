@@ -363,6 +363,12 @@ Identificar el límite de espectadores concurrentes antes de colapsar.
 
 ### Patrones arquitectónicos aplicados.
 
+#### Patrón de replicación:
+
+#### Patrón de descubrimiento de servicios (Service Discovery Pattern):
+
+#### Patrón de racimos (Cluster Pattern): 
+
 
 ## Prototipo
 
