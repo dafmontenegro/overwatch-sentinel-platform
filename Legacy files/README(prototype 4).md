@@ -369,3 +369,57 @@ Identificar el límite de espectadores concurrentes antes de colapsar.
 
 3. Deberá ubicarse en la carpeta de home y usar el comando en terminal 'docker-compose up -d --build'
 4. Devolverse a la raíz de las carpetas y hacer uso del comando en la terminal 'docker-compose up -d --build'
+
+
+
+
+
+
+
+
+
+Entregable:
+
+### 3.1. Artifact
+
+~~* Team~~
+  ~~- Name (1a, 1b, ..., 2a, 2b, ...)~~
+  ~~- Full names of the team members.~~
+~~* Software System~~
+  ~~- Name~~
+  ~~- Logo~~
+  ~~- Description~~
+* Architectural Structures
+  ~~- Component-and Connector (C&C) Structure~~
+    ~~+ C&C View~~
+    ~~+ Description of architectural **styles** and **patterns** used~~
+    ~~+ Description of architectural elements and relations.~~
+  ~~- Layered Structure~~
+    ~~+ Layered View~~
+    ~~+ Description of architectural **patterns** used (if applicable).~~
+    ~~+ Description of architectural elements and relations.~~
+  ~~- Deployment Structure~~
+    ~~+ Deployment View~~
+    ~~+ Description of architectural **patterns** used (if applicable).~~
+    ~~+ Description of architectural elements and relations.~~
+  ~~- Decomposition Structure~~
+    ~~+ Decomposition View~~
+    ~~+ Description of architectural elements and relations.~~
+~~* Quality Attributes~~
+  ~~- Security~~
+    ~~+ Security scenarios.~~
+    ~~+ Applied architectural **tactics**.~~
+    ~~+ Applied architectural **patterns**.~~
+  ~~- Performance and Scalability~~
+    + Performance scenarios.
+    + Applied architectural **tactics**.
+    + Applied architectural **patterns**.
+    + **Performance testing** analysis and results (after applying reliability tactics).
+  - Reliability
+    + Reliability (high availability, resilience or fault tolerance) scenarios.
+    + Applied architectural **tactics**.
+    + Applied architectural **patterns**.
+  ~~- Interoperability~~ -> NO ENTRA EN LA ENTREGA
+    ~~+ Interoperability scenario.~~ -> NO ENTRA EN LA ENTREGA
+    ~~+ Applied architectural **tactics**.~~ -> NO ENTRA EN LA ENTREGA
+    ~~+ Applied architectural **patterns**.~~ -> NO ENTRA EN LA ENTREGA
