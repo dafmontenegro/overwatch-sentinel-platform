@@ -11,6 +11,7 @@ import io.vertx.ext.web.handler.LoggerHandler;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.ext.web.RoutingContext;
+import java.nio.charset.StandardCharsets;
 
 public class MainVerticle extends AbstractVerticle {
 
@@ -58,13 +59,32 @@ public class MainVerticle extends AbstractVerticle {
     configureVideoRoute(router);
     configureVideoRoutes(router);
     configureLogsRoute(router);
-    configureEventsRoute(router);
     configurePlayRoute(router);
     configureRootRoute(router);
     configureAuthRoutes(router);
+    recorderreproducer(router);
     videoslist(router);
 
-    
+
+    router.get("/user/me").handler(ctx -> {
+      String authHeader = ctx.request().getHeader("Authorization");
+      if (authHeader == null || authHeader.isEmpty()) {
+        ctx.response().setStatusCode(401).end("{\"error\":\"No autorizado\"}");
+        return;
+      }
+      webClient.getAbs(authServiceUrl + "/user/me")
+        .putHeader("Authorization", authHeader)
+        .send(ar -> {
+          if (ar.succeeded()) {
+            ctx.response()
+              .setStatusCode(ar.result().statusCode())
+              .headers().addAll(ar.result().headers());
+            ctx.response().end(ar.result().body());
+          } else {
+            ctx.response().setStatusCode(502).end("{\"error\":\"Error autenticando usuario\"}");
+          }
+        });
+    });
 
     // 🔁 Proxy para GitHub callback
     router.route(HttpMethod.GET, "/api/auth/github/callback").handler(ctx -> {
@@ -162,7 +182,7 @@ public class MainVerticle extends AbstractVerticle {
   }
 
   private void configureVideoRoute(Router router) {
-    router.get("/video").handler(ctx -> {
+    router.get("/stream").handler(ctx -> {
       Promise<Void> delayPromise = Promise.promise();
 
       // Espera inicial de 5 segundos
@@ -212,24 +232,16 @@ public class MainVerticle extends AbstractVerticle {
     });
   }
 
-  # Logica para varias cámaras en vivo esperando lo prometido para Home
+  // Logica para varias cámaras en vivo esperando lo prometido para Home
   private void configureVideoRoutes(Router router) {
-    router.get("/video*").handler(ctx -> {
-      String path = ctx.normalizedPath(); // Ej: /video, /video2, /video3
-      String streamEndpoint;
-
-      // Mapear /video -> /stream, /video2 -> /stream2, etc.
-      if (path.equals("/video")) {
-        streamEndpoint = "/stream";
-      } else {
-        streamEndpoint = "/stream" + path.replace("/video", "");
-      }
+    router.get("/stream*").handler(ctx -> {
+      String path = ctx.normalizedPath();
 
       HttpClient client = vertx.createHttpClient(new HttpClientOptions()
           .setConnectTimeout(5000)
           .setIdleTimeout(0)); // Sin timeout para streaming
 
-      client.request(HttpMethod.GET, 8081, "host.docker.internal", streamEndpoint)
+      client.request(HttpMethod.GET, 8081, "host.docker.internal", "/stream")
           .onSuccess(request -> {
             request
                 .putHeader(HttpHeaders.ACCEPT.toString(), "multipart/x-mixed-replace;boundary=frame")
@@ -263,12 +275,12 @@ public class MainVerticle extends AbstractVerticle {
     });
   }
 
-  # Muestra lista de videos para que se sepa hacer la consulta posteriormente
+  // Muestra lista de videos para que se sepa hacer la consulta posteriormente
   private void videoslist(Router router){
-    router.get("/videos").handler(ctx -> {
+    router.get("/events").handler(ctx -> {
       HttpClient client = vertx.createHttpClient();
 
-      client.request(HttpMethod.GET, 8080, "host.docker.internal", "/events")
+      client.request(HttpMethod.GET, 8081, "host.docker.internal", "/events")
         .compose(req -> req.send())
         .onSuccess(response -> {
           response.body().onSuccess(body -> {
@@ -283,19 +295,20 @@ public class MainVerticle extends AbstractVerticle {
     });
   }
 
-  # Muestra el video especifico consultado
+  // Muestra el video especifico consultado
   private void recorderreproducer(Router router){
-    router.get("/videos/:path").handler(ctx -> {
-      String pathParam = ctx.pathParam("path"); // Codificado como July23%2F21hr%2FJuly23_21hr_35min17sec.avi
-      String videoPath = java.net.URLDecoder.decode(pathParam, StandardCharsets.UTF_8);
+    router.get("/videos/*").handler(ctx -> {
+      // Obtiene la subruta después de /videos/
+      String subPath = ctx.request().uri().replaceFirst("/videos/", "");
+      String videoPath = java.net.URLDecoder.decode(subPath, StandardCharsets.UTF_8);
 
       HttpClient client = vertx.createHttpClient();
 
-      client.request(HttpMethod.GET, 8080, "host.docker.internal", "/video/" + videoPath)
+      client.request(HttpMethod.GET, 8081, "host.docker.internal", "/video/" + videoPath)
         .compose(req -> req.send())
         .onSuccess(response -> {
           ctx.response()
-            .putHeader(HttpHeaders.CONTENT_TYPE, "video/x-msvideo")
+            .putHeader(HttpHeaders.CONTENT_TYPE, "video/mp4")
             .setChunked(true);
           response.pipeTo(ctx.response());
         })
@@ -312,21 +325,6 @@ public class MainVerticle extends AbstractVerticle {
             if (ar.succeeded()) {
               ctx.response()
                   .putHeader(HttpHeaders.CONTENT_TYPE, "text/plain")
-                  .end(ar.result().body());
-            } else {
-              ctx.fail(ar.cause());
-            }
-          });
-    });
-  }
-
-  private void configureEventsRoute(Router router) {
-    router.get("/events").handler(ctx -> {
-      this.webClient.getAbs(raspberrypiServiceUrl + "/events")
-          .send(ar -> {
-            if (ar.succeeded()) {
-              ctx.response()
-                  .putHeader(HttpHeaders.CONTENT_TYPE, "text/html")
                   .end(ar.result().body());
             } else {
               ctx.fail(ar.cause());

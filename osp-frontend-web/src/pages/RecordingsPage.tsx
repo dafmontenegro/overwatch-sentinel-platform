@@ -33,7 +33,6 @@ const RecordingsPage: React.FC = () => {
   }, []);
 
   const availableDates = events.map(e => e.date);
-  const recordingsForSelectedDate = events.find(e => e.date === selectedDate);
 
   return (
     <DashboardLayout>
@@ -55,7 +54,6 @@ const RecordingsPage: React.FC = () => {
             <div className="md:col-span-2">
               <RecordingList 
                 date={selectedDate} 
-                recordingEvent={recordingsForSelectedDate} 
               />
             </div>
           </div>

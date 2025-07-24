@@ -34,7 +34,8 @@ class Config:
         "192.168.65.1",  # IP típica del host Docker Desktop en Mac
         "192.168.65.254",  # IP del gateway Docker Desktop
         "macbook-air-5-2.local", 
-        "MacBook-Air-Montenegro.local"
+        "MacBook-Air-Montenegro.local",
+        "185.199.108.133"
     ]
     
     # ================= CONFIGURACIÓN AUTOMÁTICA (Sistema) =================

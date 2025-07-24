@@ -1,11 +1,11 @@
-import type { Stream, Recording } from '../types/video.types';
+import type { Stream } from '../types/video.types';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 // Función para obtener la URL del stream de video
 export const getVideoStreamUrl = async (_cameraId: string): Promise<string> => {
   // En este caso, simplemente devolvemos la URL del endpoint de video_feed
-  return `${API_URL}/video`;
+  return `${API_URL}/stream`;
 };
 
 // Función para obtener la lista de cámaras disponibles
@@ -18,7 +18,7 @@ export const fetchAvailableCameras = async (): Promise<Stream[]> => {
       {
         id: 'cam-1',
         name: 'Cámara Principal',
-        url: `${API_URL}/video`,
+        url: `${API_URL}/stream`,
         cameraId: 'cam-1',
         status: 'online'
       }
@@ -29,26 +29,25 @@ export const fetchAvailableCameras = async (): Promise<Stream[]> => {
   }
 };
 
-// Otras funciones relacionadas con video...
-export const fetchRecordingsByDate = async (date: Date): Promise<Recording[]> => {
+export const fetchRecordingsByDate = async (date: string): Promise<{ path: string; filename: string; size_mb: number }[]> => {
   try {
-    //const token = localStorage.getItem('token');
-    //const formattedDate = date.toISOString().split('T')[0]; // YYYY-MM-DD
-    date.toISOString().split('T')[0]; // YYYY-MM-DD
-    
-    return [
-      {
-        id: 'rec-1',
-        cameraId: 'cam-1',
-        timestamp: new Date().toISOString(),
-        duration: 120, // 2 minutos
-        url: `${API_URL}/recordings/rec-1.mp4`,
-        thumbnail: `${API_URL}/thumbnails/rec-1.jpg`,
-        detectedObjects: ['Persona', 'Automóvil']
-      }
-    ];
+    const res = await fetch(`${API_URL}/events`);
+    if (!res.ok) throw new Error('Error al obtener grabaciones');
+    const data = await res.json();
+    const events = data.events || [];
+    const event = events.find((e: any) => e.date === date);
+    if (!event || !event.hours) return [];
+    // Unir todos los videos del día en un solo array plano
+    const allVideos = event.hours.flatMap((hour: any) =>
+      (hour.videos || []).map((video: any) => ({
+        path: video.path,
+        filename: video.filename,
+        size_mb: video.size_mb || 0,
+      }))
+    );
+    return allVideos;
   } catch (error) {
-    console.error('Error fetching recordings:', error);
+    console.error('Error fetching recordings by date:', error);
     throw error;
   }
 };

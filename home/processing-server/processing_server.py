@@ -1,4 +1,5 @@
 import os
+import re
 import cv2
 import time
 import base64
@@ -7,8 +8,9 @@ import socket
 import logging
 import threading
 import ipaddress
+import subprocess
 import numpy as np
-from flask import Flask, Response, jsonify, request, abort
+from flask import Flask, Response, jsonify, request, abort, send_file
 from flask_cors import CORS
 from config_ps import Config
 
@@ -269,7 +271,7 @@ class SecurityProcessor:
                 self.output["file_name"] = time.strftime("%B%d_%Hhr_%Mmin%Ssec", time_localtime)
                 self.output["day"], self.output["hours"], self.output["mins"] = self.output["file_name"].split("_")
                 self.output["path"] = os.path.join(Config.EVENTS_FOLDER, self.output["day"], 
-                                                 self.output["hours"], f"{self.output['file_name']}.avi")
+                                                 self.output["hours"], f"{self.output['file_name']}.mp4")
                 logging.info(f"Security breach detected - starting recording: {self.output['file_name']}")
                 
             self.last_detection_timestamp = time.time()
@@ -289,22 +291,38 @@ class SecurityProcessor:
                 self.save_frame_buffer(self.output["path"])
 
     def save_frame_buffer(self, path):
-        """Guarda el buffer de frames como video"""
+        """Guarda el buffer de frames como video H.264 usando ffmpeg directamente"""
         if not self.frame_buffer:
             return
-            
+        
         output_seconds = int(len(self.frame_buffer) / Config.TARGET_FPS)
         os.makedirs(os.path.dirname(path), exist_ok=True)
-        
-        fourcc = cv2.VideoWriter_fourcc(*"XVID")
-        out = cv2.VideoWriter(path, fourcc, Config.TARGET_FPS, (Config.FRAME_WIDTH, Config.FRAME_HEIGHT))
-        
+
+        # Guardar frames temporales en un archivo .avi sin compresión
+        temp_path = path + ".tmp.avi"
+        fourcc = cv2.VideoWriter_fourcc(*"MJPG")
+        out = cv2.VideoWriter(temp_path, fourcc, Config.TARGET_FPS, (Config.FRAME_WIDTH, Config.FRAME_HEIGHT))
+
         logging.warning(f"EVENT: {output_seconds} seconds {path}")
-        
+
         for frame in self.frame_buffer:
             out.write(frame)
         out.release()
-        
+
+        # Convertir a H.264 usando ffmpeg directamente
+        try:
+            result = subprocess.run([
+                'ffmpeg', '-y', '-i', temp_path,
+                '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
+                path
+            ], check=True, capture_output=True)
+            logging.info(f"Video guardado en H.264: {path}")
+            os.remove(temp_path)
+        except Exception as e:
+            logging.error(f'Error al convertir a H.264: {e}')
+            if hasattr(e, 'stderr'):
+                logging.error(e.stderr.decode())
+            # Si falla, dejar el archivo temporal para depuración
         self.events += 1
         self.frame_buffer = []
         
@@ -336,8 +354,8 @@ class SecurityProcessor:
                     hour_info = {"time": hour, "videos": []}
                     
                     for video in sorted(os.listdir(hour_path)):
-                        if video.endswith('.avi'):
-                            video_name = "".join(video.split("_")[1:]).replace(".avi", "")
+                        if video.endswith('.mp4'):
+                            video_name = "".join(video.split("_")[1:]).replace(".mp4", "")
                             video_path = os.path.join(day, hour, video)
                             file_size = os.path.getsize(os.path.join(hour_path, video))
                             
@@ -389,6 +407,9 @@ if __name__ == "__main__":
         format="%(asctime)s - %(levelname)s - %(message)s",
         datefmt="%B%d/%Y %H:%M:%S"
     )
+
+    log = logging.getLogger('werkzeug')
+    log.setLevel(logging.ERROR)
 
     try:
         # Inicializar procesador de seguridad
@@ -482,6 +503,8 @@ if __name__ == "__main__":
             """Endpoint para servir videos"""
             full_path = os.path.join(Config.EVENTS_FOLDER, video_path)
             if os.path.exists(full_path):
+                file_size = os.path.getsize(full_path)
+
                 def generate():
                     with open(full_path, 'rb') as f:
                         data = f.read(1024)
@@ -489,7 +512,12 @@ if __name__ == "__main__":
                             yield data
                             data = f.read(1024)
                 
-                return Response(generate(), mimetype='video/x-msvideo')
+                response = Response(generate(), mimetype='video/mp4')
+                response.headers['Content-Length'] = str(file_size)
+                response.headers['Accept-Ranges'] = 'bytes'
+                response.headers['Cache-Control'] = 'public, max-age=3600'  # Cache 1 hora
+        
+                return response
             else:
                 return jsonify({"error": "Video not found"}), 404
 
