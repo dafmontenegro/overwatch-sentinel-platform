@@ -355,6 +355,15 @@ Identificar el límite de espectadores concurrentes antes de colapsar.
 
 ![image](https://github.com/user-attachments/assets/5bc7ffd4-83be-4740-acd9-29fac4d13571)
 
+## Fiabilidad
+
+### Escenarios de fiabilidad (alta disponibilidad, resiliencia o tolerancia a fallos).
+
+### Tácticas arquitectónicas aplicadas.
+
+### Patrones arquitectónicos aplicados.
+
+
 ## Prototipo
 
 ### Pasos de instalación
@@ -411,15 +420,20 @@ Entregable:
     ~~+ Applied architectural **tactics**.~~
     ~~+ Applied architectural **patterns**.~~
   ~~- Performance and Scalability~~
-    + Performance scenarios.
-    + Applied architectural **tactics**.
-    + Applied architectural **patterns**.
+    ~~+ Performance scenarios.~~
+    ~~+ Applied architectural **tactics**.~~
+    ~~+ Applied architectural **patterns**.~~
+  
     + **Performance testing** analysis and results (after applying reliability tactics).
   - Reliability
     + Reliability (high availability, resilience or fault tolerance) scenarios.
     + Applied architectural **tactics**.
     + Applied architectural **patterns**.
+
   ~~- Interoperability~~ -> NO ENTRA EN LA ENTREGA
+  
     ~~+ Interoperability scenario.~~ -> NO ENTRA EN LA ENTREGA
+  
     ~~+ Applied architectural **tactics**.~~ -> NO ENTRA EN LA ENTREGA
+  
     ~~+ Applied architectural **patterns**.~~ -> NO ENTRA EN LA ENTREGA
