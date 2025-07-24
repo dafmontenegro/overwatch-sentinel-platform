@@ -1,4 +1,4 @@
-# Proyecto: Prototipo 3 - Atributos de calidad, Parte 1
+# Proyecto: Prototipo 4 - Atributos de calidad, Parte 2
 
 
 # Equipo
