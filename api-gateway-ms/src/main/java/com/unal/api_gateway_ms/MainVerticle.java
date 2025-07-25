@@ -5,7 +5,6 @@ import io.vertx.core.Promise;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
-import io.vertx.core.http.HttpClientResponse;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.LoggerHandler;
 import io.vertx.ext.web.client.WebClient;
@@ -235,7 +234,6 @@ public class MainVerticle extends AbstractVerticle {
   // Logica para varias cámaras en vivo esperando lo prometido para Home
   private void configureVideoRoutes(Router router) {
     router.get("/stream*").handler(ctx -> {
-      String path = ctx.normalizedPath();
 
       HttpClient client = vertx.createHttpClient(new HttpClientOptions()
           .setConnectTimeout(5000)
