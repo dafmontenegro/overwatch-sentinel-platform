@@ -108,8 +108,9 @@ class VideoFrameProvider:
         self.current_frame_index = 0
         self.last_frame_time = time.time()
         self.target_fps = Config.TARGET_FPS
-        self.frame_delay = 1.0 / (self.target_fps + 3)
+        self.frame_interval = 1.0 / self.target_fps  # Tiempo entre frames en segundos
         self.is_loaded = False
+        self.frame_times = []  # Para estadísticas
         
     def load_test_video(self, video_path):
         """Carga todos los frames del video de prueba en memoria de forma optimizada"""
@@ -125,28 +126,36 @@ class VideoFrameProvider:
             logging.info(f"Loading test video frames from {video_path}...")
             
             # Obtener información del video
+            original_fps = cap.get(cv2.CAP_PROP_FPS)
             total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-            video_fps = cap.get(cv2.CAP_PROP_FPS)
             
-            logging.info(f"Video info: {total_frames} frames at {video_fps} FPS")
+            logging.info(f"Video info: {total_frames} frames at {original_fps} FPS")
+            
+            # Calcular factor de submuestreo si el FPS original es mayor que el objetivo
+            subsample_factor = max(1, int(original_fps / self.target_fps))
             
             frame_count = 0
+            loaded_count = 0
             while True:
                 ret, frame = cap.read()
                 if not ret:
                     break
                 
-                self.frames.append(frame)
+                # Submuestreo para coincidir con el FPS objetivo
+                if frame_count % subsample_factor == 0:
+                    self.frames.append(frame)
+                    loaded_count += 1
+                
                 frame_count += 1
                 
                 # Log progreso cada 24 frames
                 if frame_count % 24 == 0:
-                    logging.info(f"Loaded {frame_count}/{total_frames} frames")
+                    logging.info(f"Processed {frame_count}/{total_frames} frames")
                 
             cap.release()
             self.is_loaded = True
             
-            logging.info(f"Successfully loaded {len(self.frames)} frames from test video")
+            logging.info(f"Successfully loaded {len(self.frames)} frames from test video (subsampled by {subsample_factor}x)")
             return True
             
         except Exception as e:
@@ -158,20 +167,33 @@ class VideoFrameProvider:
         if not self.frames:
             return None
             
-        # Control de FPS más preciso
+        # Calcular tiempo actual
         current_time = time.time()
+        
+        # Calcular tiempo desde el último frame
         elapsed = current_time - self.last_frame_time
         
-        if elapsed < self.frame_delay:
-            time.sleep(self.frame_delay - elapsed)
+        # Si no ha pasado suficiente tiempo, esperar el resto
+        if elapsed < self.frame_interval:
+            time_to_wait = self.frame_interval - elapsed
+            time.sleep(time_to_wait)
         
+        # Actualizar tiempo del último frame después de la espera
         self.last_frame_time = time.time()
-
+        
         # Obtener frame actual (copia para evitar modificaciones)
-        frame = self.frames[self.current_frame_index]
+        frame = self.frames[self.current_frame_index].copy()
         
         # Avanzar al siguiente frame (loop infinito)
         self.current_frame_index = (self.current_frame_index + 1) % len(self.frames)
+        
+        # Registrar tiempo de frame para estadísticas
+        self.frame_times.append(time.time() - current_time)
+        if len(self.frame_times) > 10:
+            avg_time = sum(self.frame_times) / len(self.frame_times)
+            actual_fps = 1.0 / avg_time
+            logging.debug(f"Actual FPS: {actual_fps:.2f} (target: {self.target_fps})")
+            self.frame_times = []
         
         return frame
     

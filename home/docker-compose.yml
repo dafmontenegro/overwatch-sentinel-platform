@@ -15,6 +15,9 @@ services:
     networks:
       - security-network
     restart: unless-stopped
+    # Añadir esto para auto-remover cuando el contenedor se detenga
+    labels:
+      - "auto.remove=true"
 
   # Raspberry Pi 1 simulada
   pi1:
@@ -33,6 +36,9 @@ services:
     depends_on:
       - processing-server
     restart: unless-stopped
+    # Añadir esto para auto-remover cuando el contenedor se detenga
+    labels:
+      - "auto.remove=true"
 
   # Raspberry Pi 2 simulada
   pi2:
@@ -51,11 +57,10 @@ services:
     depends_on:
       - processing-server
     restart: unless-stopped
+    # Añadir esto para auto-remover cuando el contenedor se detenga
+    labels:
+      - "auto.remove=true"
 
 networks:
   security-network:
     driver: bridge
-
-volumes:
-  events:
-  logs:
