@@ -358,17 +358,60 @@ Identificar el límite de espectadores concurrentes antes de colapsar.
 
 ## Fiabilidad
 
-### Escenarios de fiabilidad (alta disponibilidad, resiliencia o tolerancia a fallos).
+#### Escenario 1: Replication Pattern
+**Descripción**
+Fallo en una instancia del servicio API Gateway durante picos de carga.
 
-### Tácticas arquitectónicas aplicadas.
+**Patrón aplicado**
 
-### Patrones arquitectónicos aplicados.
+Replication Pattern
 
-#### Patrón de replicación:
+**Tácticas aplicadas**
+1. Redundancia activa
+2. Load Balancing
 
-#### Patrón de descubrimiento de servicios (Service Discovery Pattern):
+#### Escenario 2: Service Discovery Patter
+**Descripción**
+Descubrimiento automático de servicios en la infraestructura de Google Cloud
 
-#### Patrón de racimos (Cluster Pattern): 
+**Patrón aplicado**
+
+Service Discovert Pattern
+
+**Tácticas aplicadas**
+
+1. Registro automático de servicios
+2. Resolución dinámica de DNS
+
+#### Escenario 3: Cluster Pattern
+
+**Descripción**
+Alta disponibilidad del servicio de autenticación
+
+**Patrón aplicado**
+
+Cluster Pattern
+
+**Tácticas aplicadas**
+
+1. Distribución geográfica
+2. Escalado horizontal
+3. Replica de servicios
+
+#### Escenario 4: Health Monitoring Pattern
+
+**Descripción**
+Detección proactiva de fallos en Redis
+
+**Patrón aplicado**
+
+Health Monitoring Pattern
+
+**Tácticas aplicadas**
+
+1. Monitorización periódica
+2. Detección temprana de fallos
+3. Notificación de incidentes
 
 
 ## Prototipo
