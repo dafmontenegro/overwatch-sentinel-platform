@@ -40,3 +40,5 @@
 **/yarn-error.log*
 **/.ipynb_checkpoints
 **/.ruff_cache/
+/home/events
+/home/logs
