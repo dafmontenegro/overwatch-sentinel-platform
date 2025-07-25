@@ -163,38 +163,31 @@ class VideoFrameProvider:
             return False
     
     def get_next_frame(self):
-        """Obtiene el siguiente frame del video de prueba con control de FPS preciso"""
+        """Obtiene el siguiente frame del video de prueba con control de FPS no bloqueante"""
         if not self.frames:
             return None
-            
-        # Calcular tiempo actual
+
         current_time = time.time()
         
-        # Calcular tiempo desde el último frame
+        # Inicializar en el primer frame
+        if self.last_frame_time == 0:
+            self.last_frame_time = current_time
+            frame = self.frames[self.current_frame_index].copy()
+            self.current_frame_index = (self.current_frame_index + 1) % len(self.frames)
+            return frame
+
+        # Calcular tiempo transcurrido
         elapsed = current_time - self.last_frame_time
-        
-        # Si no ha pasado suficiente tiempo, esperar el resto
+
+        # Si no ha pasado suficiente tiempo, retornar None (no bloquear)
         if elapsed < self.frame_interval:
-            time_to_wait = self.frame_interval - elapsed
-            time.sleep(time_to_wait)
-        
-        # Actualizar tiempo del último frame después de la espera
-        self.last_frame_time = time.time()
-        
-        # Obtener frame actual (copia para evitar modificaciones)
+            return None
+
+        # Actualizar tiempo y retornar frame
+        self.last_frame_time = current_time
         frame = self.frames[self.current_frame_index].copy()
-        
-        # Avanzar al siguiente frame (loop infinito)
         self.current_frame_index = (self.current_frame_index + 1) % len(self.frames)
-        
-        # Registrar tiempo de frame para estadísticas
-        self.frame_times.append(time.time() - current_time)
-        if len(self.frame_times) > 10:
-            avg_time = sum(self.frame_times) / len(self.frame_times)
-            actual_fps = 1.0 / avg_time
-            logging.debug(f"Actual FPS: {actual_fps:.2f} (target: {self.target_fps})")
-            self.frame_times = []
-        
+
         return frame
     
     def get_total_frames(self):
@@ -228,9 +221,10 @@ class RaspberryPiDetector:
             while self.running and self.camera.isOpened():
                 frame_start_time = time.time()
                 frame = self.camera.frame()
-
+                
+                # Si no hay frame disponible (fallback), continuar el bucle sin procesar
                 if frame is None:
-                    logging.warning("Frame is None, skipping detection cycle.")
+                    time.sleep(0.001)  # Pequeña pausa para evitar consumo excesivo de CPU
                     continue
 
                 self.current_frame = frame
