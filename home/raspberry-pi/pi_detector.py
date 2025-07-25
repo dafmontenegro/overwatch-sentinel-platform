@@ -108,7 +108,7 @@ class VideoFrameProvider:
         self.current_frame_index = 0
         self.last_frame_time = time.time()
         self.target_fps = Config.TARGET_FPS
-        self.frame_delay = 1.0 / self.target_fps
+        self.frame_delay = 1.0 / (self.target_fps + 3)
         self.is_loaded = False
         
     def load_test_video(self, video_path):
@@ -135,16 +135,12 @@ class VideoFrameProvider:
                 ret, frame = cap.read()
                 if not ret:
                     break
-                    
-                # Redimensionar frame si es necesario
-                if frame.shape[1] != Config.FRAME_WIDTH or frame.shape[0] != Config.FRAME_HEIGHT:
-                    frame = cv2.resize(frame, (Config.FRAME_WIDTH, Config.FRAME_HEIGHT))
                 
                 self.frames.append(frame)
                 frame_count += 1
                 
-                # Log progreso cada 100 frames
-                if frame_count % 100 == 0:
+                # Log progreso cada 24 frames
+                if frame_count % 24 == 0:
                     logging.info(f"Loaded {frame_count}/{total_frames} frames")
                 
             cap.release()
@@ -168,13 +164,14 @@ class VideoFrameProvider:
         
         if elapsed < self.frame_delay:
             time.sleep(self.frame_delay - elapsed)
-            
+        
+        self.last_frame_time = time.time()
+
         # Obtener frame actual (copia para evitar modificaciones)
         frame = self.frames[self.current_frame_index].copy()
         
         # Avanzar al siguiente frame (loop infinito)
         self.current_frame_index = (self.current_frame_index + 1) % len(self.frames)
-        self.last_frame_time = time.time()
         
         return frame
     
@@ -209,12 +206,11 @@ class RaspberryPiDetector:
             while self.running and self.camera.isOpened():
                 frame_start_time = time.time()
                 frame = self.camera.frame()
-                
+
                 if frame is None:
-                    logging.warning("Failed to capture frame")
-                    time.sleep(0.1)
+                    logging.warning("Frame is None, skipping detection cycle.")
                     continue
-                
+
                 self.current_frame = frame
                 time_localtime = time.localtime()
                 
@@ -275,13 +271,6 @@ class RaspberryPiDetector:
                         
                 except requests.exceptions.RequestException as e:
                     logging.error(f"Error sending data to processing server: {e}")
-                    time.sleep(Config.get_retry_delay())
-                
-                # Control de FPS para no saturar el procesador
-                elapsed = time.time() - frame_start_time
-                target_frame_time = 1.0 / Config.TARGET_FPS
-                if elapsed < target_frame_time:
-                    time.sleep(target_frame_time - elapsed)
                 
         except Exception as e:
             logging.error(f"Error in capture_and_detect: {e}", exc_info=True)
