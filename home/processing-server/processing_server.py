@@ -1,15 +1,13 @@
 import os
-import re
 import cv2
 import time
 import base64
 import shutil
-import socket
 import logging
 import threading
 import subprocess
 import numpy as np
-from flask import Flask, Response, jsonify, request, abort, send_file
+from flask import Flask, Response, jsonify, request, abort
 from flask_cors import CORS
 from config_ps import Config
 
@@ -62,14 +60,14 @@ class SecurityProcessor:
         self.pi_id = pi_id
         self.storage_manager = StorageManager()
         
-        # Estado de grabación por PI
+        # Estado de grabación
         self.last_detection_timestamp = None
         self.frame_buffer = []
         self.output = {}
         self.events = 0
         self.current_processed_frame = None
         
-        # Estadísticas por PI
+        # Estadísticas
         self.frames_received = 0
         self.start_time = time.time()
         self.last_frame_time = 0
@@ -103,8 +101,7 @@ class SecurityProcessor:
             # Obtener datos
             detections = frame_data['detections']
             timestamp_str = frame_data['timestamp']
-            fps = frame_data.get('fps', Config.TARGET_FPS)
-            detections_count = frame_data.get('detections_count', len(detections))
+            fps = frame_data.get('fps', 24)
             
             # Procesar detecciones y dibujar en el frame
             security_breach = False
@@ -143,8 +140,7 @@ class SecurityProcessor:
             cv2.rectangle(frame, Config.SAFE_ZONE_START, Config.SAFE_ZONE_END, zone_color, font_thickness)
             
             # Dibujar FPS
-            cv2.putText(frame, f"FPS: {fps}", (Config.FRAME_WIDTH - 180, Config.FRAME_HEIGHT - 18), 
-                       font, font_size, color, font_thickness)
+            cv2.putText(frame, f"FPS: {fps}", (1100, 702), font, font_size, color, font_thickness)
             
             # Guardar frame procesado
             self.current_processed_frame = frame
@@ -173,7 +169,7 @@ class SecurityProcessor:
             self.frame_buffer.append(frame)
         else:
             if self.last_detection_timestamp and ((time.time() - self.last_detection_timestamp) >= Config.MAX_DETECTION_DELAY):
-                if len(self.frame_buffer) >= Config.TARGET_FPS * Config.MIN_VIDEO_DURATION:
+                if len(self.frame_buffer) >= 24 * Config.MIN_VIDEO_DURATION:
                     self.save_frame_buffer(self.output["path"])
                 else:
                     logging.info(f"[{self.pi_id}] Recording too short ({len(self.frame_buffer)} frames) - discarding")
@@ -181,7 +177,7 @@ class SecurityProcessor:
                 self.last_detection_timestamp = None
                 self.frame_buffer = []
                 self.output = {}
-            elif len(self.frame_buffer) >= Config.TARGET_FPS * Config.MAX_VIDEO_DURATION:
+            elif len(self.frame_buffer) >= 24 * Config.MAX_VIDEO_DURATION:
                 logging.info(f"[{self.pi_id}] Max recording duration reached - saving video")
                 self.save_frame_buffer(self.output["path"])
 
@@ -190,13 +186,13 @@ class SecurityProcessor:
         if not self.frame_buffer:
             return
         
-        output_seconds = int(len(self.frame_buffer) / Config.TARGET_FPS)
+        output_seconds = int(len(self.frame_buffer) / 24)
         os.makedirs(os.path.dirname(path), exist_ok=True)
 
         # Guardar frames temporales en un archivo .avi sin compresión
         temp_path = path + ".tmp.avi"
         fourcc = cv2.VideoWriter_fourcc(*"MJPG")
-        out = cv2.VideoWriter(temp_path, fourcc, Config.TARGET_FPS, (Config.FRAME_WIDTH, Config.FRAME_HEIGHT))
+        out = cv2.VideoWriter(temp_path, fourcc, 24, (1280, 720))
 
         logging.warning(f"[{self.pi_id}] EVENT: {output_seconds} seconds {path}")
 
@@ -251,7 +247,7 @@ class MultiPiManager:
         self.processors = {}
         
         # Inicializar procesadores para cada PI configurada
-        for pi_id in Config.RASPBERRY_PI_HOSTNAMES.keys():
+        for pi_id in Config.RASPBERRY_PI_IDS:
             self.processors[pi_id] = SecurityProcessor(pi_id)
             logging.info(f"Initialized processor for {pi_id}")
         
@@ -263,7 +259,7 @@ class MultiPiManager:
         self.storage_manager.supervise_folder_capacity()
         
         logging.info("MultiPi Manager initialized")
-        logging.info(f"Configured PIs: {list(Config.RASPBERRY_PI_HOSTNAMES.keys())}")
+        logging.info(f"Configured PIs: {Config.RASPBERRY_PI_IDS}")
 
     def get_processor(self, pi_id):
         """Obtiene el procesador para una PI específica"""
@@ -328,7 +324,7 @@ class MultiPiManager:
                 "events_by_pi": events_by_pi,
                 "total_events": total_events,
                 "storage_used_gb": round(self.storage_manager.folder_size_gb(Config.EVENTS_FOLDER), 3),
-                "configured_pis": list(Config.RASPBERRY_PI_HOSTNAMES.keys())
+                "configured_pis": Config.RASPBERRY_PI_IDS
             }
             
         except Exception as e:
@@ -355,6 +351,7 @@ if __name__ == "__main__":
         datefmt="%B%d/%Y %H:%M:%S"
     )
 
+    # Suprimir logs de werkzeug
     log = logging.getLogger('werkzeug')
     log.setLevel(logging.ERROR)
 
@@ -372,19 +369,19 @@ if __name__ == "__main__":
                 "status": "running",
                 "service": "multi-pi-processing-server",
                 "events_folder": Config.EVENTS_FOLDER,
-                "configured_pis": list(Config.RASPBERRY_PI_HOSTNAMES.keys()),
+                "configured_pis": Config.RASPBERRY_PI_IDS,
                 "config": {
                     "safe_zone": f"{Config.SAFE_ZONE_START} to {Config.SAFE_ZONE_END}",
-                    "storage_capacity_gb": Config.STORAGE_CAPACITY_GB,
-                    "target_fps": Config.TARGET_FPS,
-                    "frame_resolution": f"{Config.FRAME_WIDTH}x{Config.FRAME_HEIGHT}"
+                    "storage_capacity_gb": Config.STORAGE_CAPACITY_GB
                 }
             })
 
-        @app.route("/process_frame/<pi_id>", methods=["POST"])
-        def process_frame(pi_id):
-            """Endpoint para recibir frames de una Raspberry Pi específica"""
+        @app.route("/process_frame", methods=["POST"])
+        def process_frame():
+            """Endpoint compatible con pi_detector.py (sin pi_id en URL)"""
             try:
+                # Usar pi1 como default para compatibilidad
+                pi_id = "pi1"
                 processor = pi_manager.get_processor(pi_id)
                 if not processor:
                     return jsonify({"error": f"PI {pi_id} not configured"}), 404
@@ -401,11 +398,16 @@ if __name__ == "__main__":
                     return jsonify({"error": "Failed to process frame"}), 500
                     
             except Exception as e:
-                logging.error(f"[{pi_id}] Error in process_frame endpoint: {e}", exc_info=True)
+                logging.error(f"Error in process_frame endpoint: {e}", exc_info=True)
                 return jsonify({"error": str(e)}), 500
 
+        @app.route("/stream")
+        def stream():
+            """Stream de video procesado (compatible con pi1)"""
+            return stream_pi("pi1")
+
         @app.route("/stream/<pi_id>")
-        def stream(pi_id):
+        def stream_pi(pi_id):
             """Stream de video procesado de una PI específica"""
             processor = pi_manager.get_processor(pi_id)
             if not processor:
@@ -420,11 +422,11 @@ if __name__ == "__main__":
                         if current_time % 2:
                             cv2.circle(frame, (1238, 21), 12, (0, 255, 0), -1)  # Verde
                         
-                        _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, Config.STREAM_QUALITY])
+                        _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 70])
                         yield (b'--frame\r\n'
                                b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
                     
-                    time.sleep(1.0 / Config.STREAM_FPS)
+                    time.sleep(1.0 / 30)  # 30 FPS para stream
             
             return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
@@ -450,7 +452,7 @@ if __name__ == "__main__":
                 response = Response(generate(), mimetype='video/mp4')
                 response.headers['Content-Length'] = str(file_size)
                 response.headers['Accept-Ranges'] = 'bytes'
-                response.headers['Cache-Control'] = 'public, max-age=3600'  # Cache 1 hora
+                response.headers['Cache-Control'] = 'public, max-age=3600'
         
                 return response
             else:
@@ -480,8 +482,7 @@ if __name__ == "__main__":
 
         logging.info("Starting multi-PI processing server on port 8080")
         logging.info(f"Safe zone configured: {Config.SAFE_ZONE_START} to {Config.SAFE_ZONE_END}")
-        logging.info(f"Detection categories: {Config.DETECTION_CATEGORY_ALLOWLIST}")
-        logging.info(f"Configured PIs: {list(Config.RASPBERRY_PI_HOSTNAMES.keys())}")
+        logging.info(f"Configured PIs: {Config.RASPBERRY_PI_IDS}")
         
         app.run(host="0.0.0.0", port=8080, threaded=True)
 
