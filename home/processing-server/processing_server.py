@@ -7,103 +7,11 @@ import shutil
 import socket
 import logging
 import threading
-import ipaddress
 import subprocess
 import numpy as np
 from flask import Flask, Response, jsonify, request, abort, send_file
 from flask_cors import CORS
 from config_ps import Config
-
-
-class SecurityMiddleware:
-    """Middleware para validar IPs y hostnames autorizados"""
-    
-    @staticmethod
-    def resolve_hostname_to_ip(hostname):
-        """Resuelve un hostname a su IP correspondiente"""
-        try:
-            return socket.gethostbyname(hostname)
-        except socket.gaierror:
-            logging.warning(f"Could not resolve hostname: {hostname}")
-            return None
-    
-    @staticmethod
-    def get_all_allowed_ips(allowed_list):
-        """Convierte lista de IPs y hostnames a lista de IPs válidas"""
-        allowed_ips = []
-        
-        for item in allowed_list:
-            # Si es una IP directa
-            try:
-                ipaddress.ip_address(item)
-                allowed_ips.append(item)
-                continue
-            except ValueError:
-                pass
-            
-            # Si es un hostname, intentar resolverlo
-            resolved_ip = SecurityMiddleware.resolve_hostname_to_ip(item)
-            if resolved_ip:
-                allowed_ips.append(resolved_ip)
-                logging.info(f"Resolved {item} -> {resolved_ip}")
-        
-        return allowed_ips
-    
-    @staticmethod
-    def is_raspberry_allowed(client_ip):
-        """Verifica si la IP es de la Raspberry Pi autorizada"""
-        try:
-            client_addr = ipaddress.ip_address(client_ip)
-            allowed_ips = SecurityMiddleware.get_all_allowed_ips(Config.ALLOWED_RASPBERRY_IPS)
-            
-            for allowed_ip in allowed_ips:
-                if client_addr == ipaddress.ip_address(allowed_ip):
-                    return True
-            return False
-        except ValueError:
-            return False
-    
-    @staticmethod
-    def is_client_allowed(client_ip):
-        """Verifica si la IP es de un cliente autorizado para ver contenido"""
-        try:
-            client_addr = ipaddress.ip_address(client_ip)
-            allowed_ips = SecurityMiddleware.get_all_allowed_ips(Config.ALLOWED_CLIENT_IPS)
-            
-            for allowed_ip in allowed_ips:
-                if client_addr == ipaddress.ip_address(allowed_ip):
-                    return True
-            return False
-        except ValueError:
-            return False
-    
-    @staticmethod
-    def is_processing_server_allowed(client_ip):
-        """Verifica si la IP es del servidor de procesamiento autorizado"""
-        try:
-            client_addr = ipaddress.ip_address(client_ip)
-            allowed_ips = SecurityMiddleware.get_all_allowed_ips(Config.ALLOWED_PROCESSING_SERVER_IPS)
-            
-            for allowed_ip in allowed_ips:
-                if client_addr == ipaddress.ip_address(allowed_ip):
-                    return True
-            return False
-        except ValueError:
-            return False
-        
-    @staticmethod
-    def is_admin_allowed(client_ip):
-        """Verifica si la IP es de un administrador autorizado"""
-        try:
-            client_addr = ipaddress.ip_address(client_ip)
-            allowed_ips = SecurityMiddleware.get_all_allowed_ips(Config.ALLOWED_ADMIN_IPS)
-            
-            for allowed_ip in allowed_ips:
-                if client_addr == ipaddress.ip_address(allowed_ip):
-                    return True
-            return False
-        except ValueError:
-            return False
 
 
 class StorageManager:
@@ -150,32 +58,23 @@ class StorageManager:
 
 
 class SecurityProcessor:
-    def __init__(self):
-        Config.validate_config()
-        
+    def __init__(self, pi_id="pi1"):
+        self.pi_id = pi_id
         self.storage_manager = StorageManager()
         
-        # Estado de grabación
+        # Estado de grabación por PI
         self.last_detection_timestamp = None
         self.frame_buffer = []
         self.output = {}
         self.events = 0
         self.current_processed_frame = None
         
-        # Estadísticas
+        # Estadísticas por PI
         self.frames_received = 0
         self.start_time = time.time()
         self.last_frame_time = 0
         
-        # Inicializar carpeta de eventos
-        os.makedirs(Config.EVENTS_FOLDER, exist_ok=True)
-        self.storage_manager.supervise_folder_capacity()
-        
-        logging.info("Security Processor initialized")
-        logging.info(f"Safe zone: {Config.SAFE_ZONE_START} to {Config.SAFE_ZONE_END}")
-        logging.info(f"Storage capacity: {Config.STORAGE_CAPACITY_GB} GB")
-        logging.info(f"Events folder: {Config.EVENTS_FOLDER}")
-        logging.info(f"Allowed IPs: {Config.ALLOWED_RASPBERRY_IPS}")
+        logging.info(f"Security Processor initialized for {self.pi_id}")
 
     def _safe_zone_invasion(self, rect_start, rect_end):
         """Detecta si un rectángulo invade la zona segura"""
@@ -198,7 +97,7 @@ class SecurityProcessor:
             frame = cv2.imdecode(frame_array, cv2.IMREAD_COLOR)
             
             if frame is None:
-                logging.error("Failed to decode frame")
+                logging.error(f"[{self.pi_id}] Failed to decode frame")
                 return False
             
             # Obtener datos
@@ -234,8 +133,8 @@ class SecurityProcessor:
                     # Marcar invasión con color diferente
                     cv2.rectangle(frame, rect_start, rect_end, (0, 255, 0), font_thickness)
             
-            # Dibujar timestamp
-            cv2.putText(frame, timestamp_str, (21, 42), font, font_size, color, font_thickness)
+            # Dibujar timestamp y PI ID
+            cv2.putText(frame, f"{self.pi_id.upper()} - {timestamp_str}", (21, 42), font, font_size, color, font_thickness)
             
             # Dibujar zona segura
             zone_color = (0, 255, 255)  # Amarillo
@@ -247,10 +146,6 @@ class SecurityProcessor:
             cv2.putText(frame, f"FPS: {fps}", (Config.FRAME_WIDTH - 180, Config.FRAME_HEIGHT - 18), 
                        font, font_size, color, font_thickness)
             
-            # Dibujar contador de detecciones
-            # cv2.putText(frame, f"Detections: {detections_count}", (Config.FRAME_WIDTH - 250, 42), 
-            #           font, font_size, color, font_thickness)
-            
             # Guardar frame procesado
             self.current_processed_frame = frame
             
@@ -261,18 +156,18 @@ class SecurityProcessor:
             return True
             
         except Exception as e:
-            logging.error(f"Error processing frame data: {e}", exc_info=True)
+            logging.error(f"[{self.pi_id}] Error processing frame data: {e}", exc_info=True)
             return False
 
     def _handle_security_logic(self, security_breach, time_localtime, frame):
         """Maneja la lógica de seguridad y grabación de eventos"""
         if security_breach:
             if not self.frame_buffer:
-                self.output["file_name"] = time.strftime("%B%d_%Hhr_%Mmin%Ssec", time_localtime)
-                self.output["day"], self.output["hours"], self.output["mins"] = self.output["file_name"].split("_")
-                self.output["path"] = os.path.join(Config.EVENTS_FOLDER, self.output["day"], 
+                self.output["file_name"] = f"{self.pi_id}_{time.strftime('%B%d_%Hhr_%Mmin%Ssec', time_localtime)}"
+                self.output["day"], self.output["hours"], self.output["mins"] = self.output["file_name"].split("_")[1:]
+                self.output["path"] = os.path.join(Config.EVENTS_FOLDER, self.pi_id, self.output["day"], 
                                                  self.output["hours"], f"{self.output['file_name']}.mp4")
-                logging.info(f"Security breach detected - starting recording: {self.output['file_name']}")
+                logging.info(f"[{self.pi_id}] Security breach detected - starting recording: {self.output['file_name']}")
                 
             self.last_detection_timestamp = time.time()
             self.frame_buffer.append(frame)
@@ -281,13 +176,13 @@ class SecurityProcessor:
                 if len(self.frame_buffer) >= Config.TARGET_FPS * Config.MIN_VIDEO_DURATION:
                     self.save_frame_buffer(self.output["path"])
                 else:
-                    logging.info(f"Recording too short ({len(self.frame_buffer)} frames) - discarding")
+                    logging.info(f"[{self.pi_id}] Recording too short ({len(self.frame_buffer)} frames) - discarding")
                 
                 self.last_detection_timestamp = None
                 self.frame_buffer = []
                 self.output = {}
             elif len(self.frame_buffer) >= Config.TARGET_FPS * Config.MAX_VIDEO_DURATION:
-                logging.info(f"Max recording duration reached - saving video")
+                logging.info(f"[{self.pi_id}] Max recording duration reached - saving video")
                 self.save_frame_buffer(self.output["path"])
 
     def save_frame_buffer(self, path):
@@ -303,7 +198,7 @@ class SecurityProcessor:
         fourcc = cv2.VideoWriter_fourcc(*"MJPG")
         out = cv2.VideoWriter(temp_path, fourcc, Config.TARGET_FPS, (Config.FRAME_WIDTH, Config.FRAME_HEIGHT))
 
-        logging.warning(f"EVENT: {output_seconds} seconds {path}")
+        logging.warning(f"[{self.pi_id}] EVENT: {output_seconds} seconds {path}")
 
         for frame in self.frame_buffer:
             out.write(frame)
@@ -316,13 +211,13 @@ class SecurityProcessor:
                 '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
                 path
             ], check=True, capture_output=True)
-            logging.info(f"Video guardado en H.264: {path}")
+            logging.info(f"[{self.pi_id}] Video guardado en H.264: {path}")
             os.remove(temp_path)
         except Exception as e:
-            logging.error(f'Error al convertir a H.264: {e}')
+            logging.error(f'[{self.pi_id}] Error al convertir a H.264: {e}')
             if hasattr(e, 'stderr'):
                 logging.error(e.stderr.decode())
-            # Si falla, dejar el archivo temporal para depuración
+        
         self.events += 1
         self.frame_buffer = []
         
@@ -330,57 +225,6 @@ class SecurityProcessor:
             storage_thread = threading.Thread(target=self.storage_manager.supervise_folder_capacity)
             storage_thread.daemon = True
             storage_thread.start()
-
-    def get_events_json(self):
-        """Retorna la lista de eventos en formato JSON"""
-        if not os.path.exists(Config.EVENTS_FOLDER):
-            return {"events": [], "message": "No events folder found"}
-        
-        events = []
-        
-        try:
-            for day in sorted(os.listdir(Config.EVENTS_FOLDER)):
-                day_path = os.path.join(Config.EVENTS_FOLDER, day)
-                if not os.path.isdir(day_path):
-                    continue
-                    
-                day_info = {"date": day, "hours": []}
-                
-                for hour in sorted(os.listdir(day_path)):
-                    hour_path = os.path.join(day_path, hour)
-                    if not os.path.isdir(hour_path):
-                        continue
-                        
-                    hour_info = {"time": hour, "videos": []}
-                    
-                    for video in sorted(os.listdir(hour_path)):
-                        if video.endswith('.mp4'):
-                            video_name = "".join(video.split("_")[1:]).replace(".mp4", "")
-                            video_path = os.path.join(day, hour, video)
-                            file_size = os.path.getsize(os.path.join(hour_path, video))
-                            
-                            hour_info["videos"].append({
-                                "name": video_name,
-                                "path": video_path,
-                                "filename": video,
-                                "size_mb": round(file_size / (1024 * 1024), 2)
-                            })
-                    
-                    if hour_info["videos"]:
-                        day_info["hours"].append(hour_info)
-                
-                if day_info["hours"]:
-                    events.append(day_info)
-            
-            return {
-                "events": events,
-                "total_events": sum(len(hour["videos"]) for day in events for hour in day["hours"]),
-                "storage_used_gb": round(self.storage_manager.folder_size_gb(Config.EVENTS_FOLDER), 3)
-            }
-            
-        except Exception as e:
-            logging.error(f"Error getting events: {e}", exc_info=True)
-            return {"events": [], "error": str(e)}
 
     def get_current_frame(self):
         """Retorna el frame procesado actual"""
@@ -390,14 +234,117 @@ class SecurityProcessor:
         """Retorna estadísticas del procesador"""
         uptime = time.time() - self.start_time
         return {
+            "pi_id": self.pi_id,
             "frames_received": self.frames_received,
             "events_count": self.events,
             "uptime_seconds": round(uptime, 2),
-            "storage_used_gb": round(self.storage_manager.folder_size_gb(Config.EVENTS_FOLDER), 3),
-            "storage_capacity_gb": Config.STORAGE_CAPACITY_GB,
             "last_frame_time": self.last_frame_time,
             "current_buffer_size": len(self.frame_buffer) if self.frame_buffer else 0
         }
+
+
+class MultiPiManager:
+    def __init__(self):
+        Config.validate_config()
+        
+        # Diccionario de procesadores por PI
+        self.processors = {}
+        
+        # Inicializar procesadores para cada PI configurada
+        for pi_id in Config.RASPBERRY_PI_HOSTNAMES.keys():
+            self.processors[pi_id] = SecurityProcessor(pi_id)
+            logging.info(f"Initialized processor for {pi_id}")
+        
+        # Storage manager compartido
+        self.storage_manager = StorageManager()
+        
+        # Inicializar carpeta de eventos
+        os.makedirs(Config.EVENTS_FOLDER, exist_ok=True)
+        self.storage_manager.supervise_folder_capacity()
+        
+        logging.info("MultiPi Manager initialized")
+        logging.info(f"Configured PIs: {list(Config.RASPBERRY_PI_HOSTNAMES.keys())}")
+
+    def get_processor(self, pi_id):
+        """Obtiene el procesador para una PI específica"""
+        return self.processors.get(pi_id)
+
+    def get_events_json(self):
+        """Retorna la lista de eventos de todas las PIs en formato JSON"""
+        if not os.path.exists(Config.EVENTS_FOLDER):
+            return {"events": [], "message": "No events folder found"}
+        
+        events_by_pi = {}
+        total_events = 0
+        
+        try:
+            # Listar por PI
+            for pi_id in self.processors.keys():
+                pi_folder = os.path.join(Config.EVENTS_FOLDER, pi_id)
+                if not os.path.exists(pi_folder):
+                    events_by_pi[pi_id] = []
+                    continue
+                
+                pi_events = []
+                
+                for day in sorted(os.listdir(pi_folder)):
+                    day_path = os.path.join(pi_folder, day)
+                    if not os.path.isdir(day_path):
+                        continue
+                        
+                    day_info = {"date": day, "hours": []}
+                    
+                    for hour in sorted(os.listdir(day_path)):
+                        hour_path = os.path.join(day_path, hour)
+                        if not os.path.isdir(hour_path):
+                            continue
+                            
+                        hour_info = {"time": hour, "videos": []}
+                        
+                        for video in sorted(os.listdir(hour_path)):
+                            if video.endswith('.mp4'):
+                                video_name = "_".join(video.split("_")[2:]).replace(".mp4", "")
+                                video_path = os.path.join(pi_id, day, hour, video)
+                                file_size = os.path.getsize(os.path.join(hour_path, video))
+                                
+                                hour_info["videos"].append({
+                                    "name": video_name,
+                                    "path": video_path,
+                                    "filename": video,
+                                    "size_mb": round(file_size / (1024 * 1024), 2),
+                                    "pi_id": pi_id
+                                })
+                                total_events += 1
+                        
+                        if hour_info["videos"]:
+                            day_info["hours"].append(hour_info)
+                    
+                    if day_info["hours"]:
+                        pi_events.append(day_info)
+                
+                events_by_pi[pi_id] = pi_events
+            
+            return {
+                "events_by_pi": events_by_pi,
+                "total_events": total_events,
+                "storage_used_gb": round(self.storage_manager.folder_size_gb(Config.EVENTS_FOLDER), 3),
+                "configured_pis": list(Config.RASPBERRY_PI_HOSTNAMES.keys())
+            }
+            
+        except Exception as e:
+            logging.error(f"Error getting events: {e}", exc_info=True)
+            return {"events_by_pi": {}, "error": str(e)}
+
+    def get_all_stats(self):
+        """Retorna estadísticas de todas las PIs"""
+        stats = {}
+        for pi_id, processor in self.processors.items():
+            stats[pi_id] = processor.get_stats()
+        
+        stats["storage_used_gb"] = round(self.storage_manager.folder_size_gb(Config.EVENTS_FOLDER), 3)
+        stats["storage_capacity_gb"] = Config.STORAGE_CAPACITY_GB
+        
+        return stats
 
 
 if __name__ == "__main__":
@@ -412,52 +359,36 @@ if __name__ == "__main__":
     log.setLevel(logging.ERROR)
 
     try:
-        # Inicializar procesador de seguridad
-        processor = SecurityProcessor()
+        # Inicializar manager multi-PI
+        pi_manager = MultiPiManager()
 
         # Inicializar Flask
         app = Flask(__name__)
         CORS(app)
 
-        @app.before_request
-        def validate_ip():
-            client_ip = request.remote_addr
-            
-            # Endpoints que solo puede acceder la Raspberry Pi
-            raspberry_endpoints = ['process_frame']
-            
-            # Endpoints que solo pueden acceder clientes autorizados
-            client_endpoints = ['stream', 'events', 'get_video', 'status']
-            
-            if request.endpoint in raspberry_endpoints:
-                if not SecurityMiddleware.is_raspberry_allowed(client_ip):
-                    logging.warning(f"Unauthorized Raspberry Pi access attempt from: {client_ip}")
-                    abort(403)
-            
-            elif request.endpoint in client_endpoints:
-                if not SecurityMiddleware.is_client_allowed(client_ip):
-                    logging.warning(f"Unauthorized client access attempt from: {client_ip}")
-                    abort(403)
-
         @app.route("/")
         def index():
             return jsonify({
                 "status": "running",
-                "service": "processing-server",
+                "service": "multi-pi-processing-server",
                 "events_folder": Config.EVENTS_FOLDER,
+                "configured_pis": list(Config.RASPBERRY_PI_HOSTNAMES.keys()),
                 "config": {
                     "safe_zone": f"{Config.SAFE_ZONE_START} to {Config.SAFE_ZONE_END}",
                     "storage_capacity_gb": Config.STORAGE_CAPACITY_GB,
                     "target_fps": Config.TARGET_FPS,
-                    "frame_resolution": f"{Config.FRAME_WIDTH}x{Config.FRAME_HEIGHT}",
-                    "allowed_ips": Config.ALLOWED_RASPBERRY_IPS
+                    "frame_resolution": f"{Config.FRAME_WIDTH}x{Config.FRAME_HEIGHT}"
                 }
             })
 
-        @app.route("/process_frame", methods=["POST"])
-        def process_frame():
-            """Endpoint para recibir frames de la Raspberry Pi (IP protegida)"""
+        @app.route("/process_frame/<pi_id>", methods=["POST"])
+        def process_frame(pi_id):
+            """Endpoint para recibir frames de una Raspberry Pi específica"""
             try:
+                processor = pi_manager.get_processor(pi_id)
+                if not processor:
+                    return jsonify({"error": f"PI {pi_id} not configured"}), 404
+                
                 frame_data = request.json
                 if not frame_data:
                     return jsonify({"error": "No data provided"}), 400
@@ -465,17 +396,21 @@ if __name__ == "__main__":
                 success = processor.process_frame_data(frame_data)
                 
                 if success:
-                    return jsonify({"status": "processed"})
+                    return jsonify({"status": "processed", "pi_id": pi_id})
                 else:
                     return jsonify({"error": "Failed to process frame"}), 500
                     
             except Exception as e:
-                logging.error(f"Error in process_frame endpoint: {e}", exc_info=True)
+                logging.error(f"[{pi_id}] Error in process_frame endpoint: {e}", exc_info=True)
                 return jsonify({"error": str(e)}), 500
 
-        @app.route("/stream")
-        def stream():
-            """Stream de video procesado"""
+        @app.route("/stream/<pi_id>")
+        def stream(pi_id):
+            """Stream de video procesado de una PI específica"""
+            processor = pi_manager.get_processor(pi_id)
+            if not processor:
+                abort(404)
+            
             def generate():
                 while True:
                     frame = processor.get_current_frame()
@@ -495,8 +430,8 @@ if __name__ == "__main__":
 
         @app.route("/events")
         def events():
-            """Endpoint para obtener la lista de eventos en JSON"""
-            return jsonify(processor.get_events_json())
+            """Endpoint para obtener la lista de eventos de todas las PIs en JSON"""
+            return jsonify(pi_manager.get_events_json())
 
         @app.route("/video/<path:video_path>")
         def get_video(video_path):
@@ -523,7 +458,19 @@ if __name__ == "__main__":
 
         @app.route("/status")
         def status():
-            """Status del servidor de procesamiento"""
+            """Status del servidor de procesamiento multi-PI"""
+            return jsonify({
+                "status": "running",
+                "pis": pi_manager.get_all_stats()
+            })
+
+        @app.route("/status/<pi_id>")
+        def pi_status(pi_id):
+            """Status de una PI específica"""
+            processor = pi_manager.get_processor(pi_id)
+            if not processor:
+                return jsonify({"error": f"PI {pi_id} not configured"}), 404
+            
             stats = processor.get_stats()
             return jsonify({
                 "status": "running",
@@ -531,23 +478,12 @@ if __name__ == "__main__":
                 **stats
             })
 
-        logging.info("Starting processing server on ports 8080 (web) and 8081 (raspberry)")
+        logging.info("Starting multi-PI processing server on port 8080")
         logging.info(f"Safe zone configured: {Config.SAFE_ZONE_START} to {Config.SAFE_ZONE_END}")
         logging.info(f"Detection categories: {Config.DETECTION_CATEGORY_ALLOWLIST}")
-        logging.info(f"Authorized IPs: {Config.ALLOWED_RASPBERRY_IPS}")
+        logging.info(f"Configured PIs: {list(Config.RASPBERRY_PI_HOSTNAMES.keys())}")
         
-        # Iniciar servidor en puerto 8081 para recibir datos de raspberry
-        from werkzeug.serving import make_server
-        
-        # Servidor principal en puerto 8080
-        server = make_server('0.0.0.0', 8080, app, threaded=True)
-        server_thread = threading.Thread(target=server.serve_forever)
-        server_thread.daemon = True
-        server_thread.start()
-        
-        # Servidor para raspberry en puerto 8081
-        server_8081 = make_server('0.0.0.0', 8081, app, threaded=True)
-        server_8081.serve_forever()
+        app.run(host="0.0.0.0", port=8080, threaded=True)
 
     except Exception as e:
         logging.error(f"Error starting processing server: {e}", exc_info=True)
