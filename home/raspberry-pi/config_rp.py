@@ -1,3 +1,4 @@
+import os
 import multiprocessing
 
 class Config:
@@ -24,8 +25,8 @@ class Config:
     # Video de respaldo y para pruebas
     FALLBACK_VIDEO = "test.mp4"
 
-    # Configuración de procesamiento
-    PROCESSING_SERVER_HOSTNAME = "localhost"
+    # Configuración de procesamiento - usar variable de entorno si está disponible
+    PROCESSING_SERVER_HOSTNAME = os.getenv("PROCESSING_SERVER_HOSTNAME", "http://localhost:8080")
 
     # Streaming
     STREAM_QUALITY = 70  # Calidad JPEG para streaming

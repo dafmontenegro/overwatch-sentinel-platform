@@ -19,7 +19,7 @@ class Config:
     
     # ================= ALMACENAMIENTO =================
     STORAGE_CAPACITY_GB = 2       # capacidad máxima en GB
-    EVENTS_FOLDER = "events"      # Carpeta para guardar eventos
+    EVENTS_FOLDER = "/app/events" # Carpeta para guardar eventos (Docker volume)
     
     # ================= VALIDACIÓN =================
     @classmethod

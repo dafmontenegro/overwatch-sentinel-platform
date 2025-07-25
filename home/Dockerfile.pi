@@ -1,0 +1,38 @@
+# Dockerfile para simular Raspberry Pi
+FROM python:3.9-slim
+
+# Instalar dependencias del sistema
+RUN apt-get update && apt-get install -y \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    libgomp1 \
+    libgthread-2.0-0 \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
+
+# Establecer directorio de trabajo
+WORKDIR /app
+
+# Copiar requirements desde la carpeta raspberry-pi
+COPY raspberry-pi/requirements.txt .
+
+# Instalar dependencias de Python
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Descargar modelo de detección de objetos
+RUN wget https://storage.googleapis.com/download.tensorflow.org/models/tflite/coco_ssd_mobilenet_v1_1.0_quant_2018_06_29.zip \
+    && unzip coco_ssd_mobilenet_v1_1.0_quant_2018_06_29.zip \
+    && mv detect.tflite efficientdet_lite0.tflite \
+    && rm coco_ssd_mobilenet_v1_1.0_quant_2018_06_29.zip
+
+# Copiar código fuente desde la carpeta raspberry-pi
+COPY raspberry-pi/ .
+
+# Exponer puerto
+EXPOSE 8080
+
+# Comando de inicio
+CMD ["python", "pi_detector.py"]
