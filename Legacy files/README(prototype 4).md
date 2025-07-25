@@ -38,7 +38,7 @@ Esta solución está orientada a escenarios donde se requiere supervisión efici
 ## Estructura Componente y Conector (C&C)
 ### C&C View
 
-![Components & Connectors](https://github.com/user-attachments/assets/73ac7544-07e7-467e-8e6c-d7fb2e1f50a6)
+![Components & Connectors](https://github.com/user-attachments/assets/c0d52a95-6c20-4aa6-a5ec-4d4ba1ded82c)
 
 ### Descripción de los estilos arquitectónicos utilizados
 
@@ -146,7 +146,7 @@ Este modelo garantiza el cumplimiento de los principios de microservicios: escal
 
 ## Layered Structure
 ### Layered View
- ![2fbc5179-06c2-4fc0-b18b-06e20dcdb9bd](https://github.com/user-attachments/assets/da45d63c-3465-4dc2-902e-e68696e1b6cc)
+ ![Layered](https://github.com/user-attachments/assets/6bc92127-111d-43ec-b02a-81a1538cdc66)
 
 ### Descripción de elementos arquitectónicos y relaciones
 
@@ -173,7 +173,8 @@ El sistema OSP maneja cuatro capas en este caso:
      
 ## Deployment Structure
 ### Deployment View
-![Deployment View](https://github.com/user-attachments/assets/500b27b0-68ca-4764-bf64-b610f0b1a153)
+<img width="2155" height="1201" alt="deployment drawio" src="https://github.com/user-attachments/assets/e2b2ca19-3912-457f-8594-f96a41a342e6" />
+
 
 
 ### Descripción de elementos arquitectónicos y relaciones
