@@ -104,49 +104,31 @@ class VideoFrameProvider:
     """Proveedor de frames optimizado para video de prueba"""
     
     def __init__(self):
-        self.frames = []
-        self.current_frame_index = 0
-        self.last_frame_time = time.time()
+        self.cap = None
         self.target_fps = Config.TARGET_FPS
-        self.frame_delay = 1.0 / (self.target_fps + 3)
+        self.frame_delay = 1.0 / self.target_fps
+        self.last_frame_time = time.time()
         self.is_loaded = False
         
     def load_test_video(self, video_path):
-        """Carga todos los frames del video de prueba en memoria de forma optimizada"""
-        if self.is_loaded:
-            return True
-            
+        """Carga el video de prueba sin cargar todos los frames en memoria"""
         try:
-            cap = cv2.VideoCapture(video_path)
-            if not cap.isOpened():
+            self.cap = cv2.VideoCapture(video_path)
+            if not self.cap.isOpened():
                 logging.error(f"Cannot open test video: {video_path}")
                 return False
                 
-            logging.info(f"Loading test video frames from {video_path}...")
+            # Configurar propiedades del video
+            self.video_fps = self.cap.get(cv2.CAP_PROP_FPS)
+            self.total_frames = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
             
-            # Obtener información del video
-            total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-            video_fps = cap.get(cv2.CAP_PROP_FPS)
+            # Ajustar el delay si el FPS del video es diferente al target
+            if self.video_fps > 0 and self.video_fps != self.target_fps:
+                self.frame_delay = 1.0 / self.video_fps
+                logging.warning(f"Video FPS ({self.video_fps}) differs from target FPS ({self.target_fps}). Using video FPS.")
             
-            logging.info(f"Video info: {total_frames} frames at {video_fps} FPS")
-            
-            frame_count = 0
-            while True:
-                ret, frame = cap.read()
-                if not ret:
-                    break
-                
-                self.frames.append(frame)
-                frame_count += 1
-                
-                # Log progreso cada 24 frames
-                if frame_count % 24 == 0:
-                    logging.info(f"Loaded {frame_count}/{total_frames} frames")
-                
-            cap.release()
+            logging.info(f"Video loaded: {self.total_frames} frames at {self.video_fps} FPS")
             self.is_loaded = True
-            
-            logging.info(f"Successfully loaded {len(self.frames)} frames from test video")
             return True
             
         except Exception as e:
@@ -154,30 +136,34 @@ class VideoFrameProvider:
             return False
     
     def get_next_frame(self):
-        """Obtiene el siguiente frame del video de prueba con control de FPS preciso"""
-        if not self.frames:
+        """Obtiene el siguiente frame del video con control preciso de FPS"""
+        if not self.is_loaded or not self.cap:
             return None
             
-        # Control de FPS más preciso
+        # Calcular tiempo hasta el próximo frame
         current_time = time.time()
         elapsed = current_time - self.last_frame_time
+        sleep_time = max(0, self.frame_delay - elapsed)
         
-        if elapsed < self.frame_delay:
-            time.sleep(self.frame_delay - elapsed)
+        if sleep_time > 0:
+            time.sleep(sleep_time)
+        
+        # Leer frame
+        ret, frame = self.cap.read()
+        
+        # Si llegamos al final, reiniciar
+        if not ret:
+            self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+            ret, frame = self.cap.read()
+            if not ret:
+                return None
         
         self.last_frame_time = time.time()
-
-        # Obtener frame actual (copia para evitar modificaciones)
-        frame = self.frames[self.current_frame_index].copy()
-        
-        # Avanzar al siguiente frame (loop infinito)
-        self.current_frame_index = (self.current_frame_index + 1) % len(self.frames)
-        
         return frame
     
     def get_total_frames(self):
-        """Retorna el número total de frames cargados"""
-        return len(self.frames)
+        """Retorna el número total de frames en el video"""
+        return self.total_frames if self.is_loaded else 0
 
 
 class RaspberryPiDetector:
@@ -260,7 +246,7 @@ class RaspberryPiDetector:
                 try:
                     response = requests.post(
                         f"{self.processing_server_hostname}/process_frame",
-                        timeout=1.0 / (Config.TARGET_FPS + 3),
+                        timeout=15,
                         json=data
                     )
                     
@@ -271,6 +257,7 @@ class RaspberryPiDetector:
                         
                 except requests.exceptions.RequestException as e:
                     logging.error(f"Error sending data to processing server: {e}")
+                    time.sleep(3)
                 
         except Exception as e:
             logging.error(f"Error in capture_and_detect: {e}", exc_info=True)

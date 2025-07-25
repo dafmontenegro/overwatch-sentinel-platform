@@ -7,9 +7,6 @@ services:
     container_name: processing-server
     ports:
       - "8080:8080"
-    volumes:
-      - ./events:/app/events
-      - ./logs:/app/logs
     environment:
       - PYTHONUNBUFFERED=1
     networks:
