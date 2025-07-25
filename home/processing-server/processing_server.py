@@ -232,6 +232,7 @@ class SecurityProcessor:
                 if self._safe_zone_invasion(rect_start, rect_end):
                     security_breach = True
                     # Marcar invasión con color diferente
+                    cv2.putText(frame, label, text_position, font, font_size, (0, 255, 0), font_thickness)
                     cv2.rectangle(frame, rect_start, rect_end, (0, 255, 0), font_thickness)
             
             # Dibujar timestamp

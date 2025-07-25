@@ -9,7 +9,7 @@ class Config:
     # Detección de objetos
     DETECTION_SCORE_THRESHOLD = 0.5
     DETECTION_MAX_RESULTS = 3
-    DETECTION_CATEGORY_ALLOWLIST = ["person", "dog"]
+    DETECTION_CATEGORY_ALLOWLIST = ["person", "bicycle"]
 
     # Seguridad de red - Solo acepta conexiones del servidor de procesamiento
     ALLOWED_PROCESSING_SERVER_IPS = ["172.20.0.12"]  # Solo IP del contenedor processing
@@ -25,7 +25,7 @@ class Config:
     # Video
     FRAME_WIDTH = 1280
     FRAME_HEIGHT = 720
-    TARGET_FPS = 12  # REDUCIDO para evitar saturación del processing server
+    TARGET_FPS = 24  # REDUCIDO para evitar saturación del processing server
     
     # Modelo de detección
     MODEL_NAME = "efficientdet_lite0.tflite"
@@ -34,9 +34,7 @@ class Config:
     @staticmethod
     def get_num_threads():
         """Calcula el número óptimo de threads basado en la CPU"""
-        cpu_count = multiprocessing.cpu_count()
-        # Usar la mitad de los cores disponibles, mínimo 2, máximo 8
-        return max(2, min(8, cpu_count // 2))
+        return multiprocessing.cpu_count()
     
     # Cámara
     CAMERA_NUMBER = 0
@@ -44,7 +42,7 @@ class Config:
     
     # Streaming
     STREAM_FPS = 30
-    STREAM_QUALITY = 85  # Calidad JPEG para streaming
+    STREAM_QUALITY = 70  # Calidad JPEG para streaming
     
     # Timeouts de red automáticos basados en contenedores (AUMENTADOS)
     @staticmethod

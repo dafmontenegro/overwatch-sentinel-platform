@@ -43,11 +43,11 @@ class Config:
     # Video
     FRAME_WIDTH = 1280
     FRAME_HEIGHT = 720
-    TARGET_FPS = 24
+    TARGET_FPS = 30
     
     # Streaming
     STREAM_FPS = 30
-    STREAM_QUALITY = 85  # Calidad JPEG para streaming
+    STREAM_QUALITY = 70  # Calidad JPEG para streaming
     
     # Timeouts de red automáticos basados en contenedores (AUMENTADOS)
     @staticmethod
