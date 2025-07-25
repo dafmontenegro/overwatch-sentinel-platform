@@ -1,15 +1,108 @@
 import cv2
 import time
 import base64
+import socket
 import logging
 import requests
+import ipaddress
 import threading
 from tflite_support.task import core
 from tflite_support.task import vision
 from tflite_support.task import processor
-from flask import Flask, jsonify, request
+from flask import Flask, Response, jsonify, request, abort
 from flask_cors import CORS
 from config_rp import Config
+
+
+class SecurityMiddleware:
+    """Middleware para validar IPs y hostnames autorizados"""
+    
+    @staticmethod
+    def resolve_hostname_to_ip(hostname):
+        """Resuelve un hostname a su IP correspondiente"""
+        try:
+            return socket.gethostbyname(hostname)
+        except socket.gaierror:
+            logging.warning(f"Could not resolve hostname: {hostname}")
+            return None
+    
+    @staticmethod
+    def get_all_allowed_ips(allowed_list):
+        """Convierte lista de IPs y hostnames a lista de IPs válidas"""
+        allowed_ips = []
+        
+        for item in allowed_list:
+            # Si es una IP directa
+            try:
+                ipaddress.ip_address(item)
+                allowed_ips.append(item)
+                continue
+            except ValueError:
+                pass
+            
+            # Si es un hostname, intentar resolverlo
+            resolved_ip = SecurityMiddleware.resolve_hostname_to_ip(item)
+            if resolved_ip:
+                allowed_ips.append(resolved_ip)
+                logging.info(f"Resolved {item} -> {resolved_ip}")
+        
+        return allowed_ips
+    
+    @staticmethod
+    def is_raspberry_allowed(client_ip):
+        """Verifica si la IP es de la Raspberry Pi autorizada"""
+        try:
+            client_addr = ipaddress.ip_address(client_ip)
+            allowed_ips = SecurityMiddleware.get_all_allowed_ips(Config.ALLOWED_RASPBERRY_IPS)
+            
+            for allowed_ip in allowed_ips:
+                if client_addr == ipaddress.ip_address(allowed_ip):
+                    return True
+            return False
+        except ValueError:
+            return False
+    
+    @staticmethod
+    def is_client_allowed(client_ip):
+        """Verifica si la IP es de un cliente autorizado para ver contenido"""
+        try:
+            client_addr = ipaddress.ip_address(client_ip)
+            allowed_ips = SecurityMiddleware.get_all_allowed_ips(Config.ALLOWED_CLIENT_IPS)
+            
+            for allowed_ip in allowed_ips:
+                if client_addr == ipaddress.ip_address(allowed_ip):
+                    return True
+            return False
+        except ValueError:
+            return False
+    
+    @staticmethod
+    def is_processing_server_allowed(client_ip):
+        """Verifica si la IP es del servidor de procesamiento autorizado"""
+        try:
+            client_addr = ipaddress.ip_address(client_ip)
+            allowed_ips = SecurityMiddleware.get_all_allowed_ips(Config.ALLOWED_PROCESSING_SERVER_IPS)
+            
+            for allowed_ip in allowed_ips:
+                if client_addr == ipaddress.ip_address(allowed_ip):
+                    return True
+            return False
+        except ValueError:
+            return False
+        
+    @staticmethod
+    def is_admin_allowed(client_ip):
+        """Verifica si la IP es de un administrador autorizado"""
+        try:
+            client_addr = ipaddress.ip_address(client_ip)
+            allowed_ips = SecurityMiddleware.get_all_allowed_ips(Config.ALLOWED_ADMIN_IPS)
+            
+            for allowed_ip in allowed_ips:
+                if client_addr == ipaddress.ip_address(allowed_ip):
+                    return True
+            return False
+        except ValueError:
+            return False
 
 
 class ObjectDetector:
@@ -17,7 +110,7 @@ class ObjectDetector:
         base_options = core.BaseOptions(
             file_name=Config.MODEL_NAME, 
             use_coral=False, 
-            num_threads=Config.NUM_THREADS
+            num_threads=Config.get_num_threads()
         )
         detection_options = processor.DetectionOptions(
             max_results=Config.DETECTION_MAX_RESULTS,
@@ -33,6 +126,89 @@ class ObjectDetector:
     def detections(self, image):
         rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         return self.detector.detect(vision.TensorImage.create_from_array(rgb_image)).detections
+
+
+class VideoFrameProvider:
+    """Proveedor de frames optimizado para video de prueba"""
+    
+    def __init__(self):
+        self.frames = []
+        self.current_frame_index = 0
+        self.last_frame_time = time.time()
+        self.target_fps = Config.TARGET_FPS
+        self.frame_delay = 1.0 / self.target_fps
+        self.is_loaded = False
+        
+    def load_test_video(self, video_path):
+        """Carga todos los frames del video de prueba en memoria de forma optimizada"""
+        if self.is_loaded:
+            return True
+            
+        try:
+            cap = cv2.VideoCapture(video_path)
+            if not cap.isOpened():
+                logging.error(f"Cannot open test video: {video_path}")
+                return False
+                
+            logging.info(f"Loading test video frames from {video_path}...")
+            
+            # Obtener información del video
+            total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            video_fps = cap.get(cv2.CAP_PROP_FPS)
+            
+            logging.info(f"Video info: {total_frames} frames at {video_fps} FPS")
+            
+            frame_count = 0
+            while True:
+                ret, frame = cap.read()
+                if not ret:
+                    break
+                    
+                # Redimensionar frame si es necesario
+                if frame.shape[1] != Config.FRAME_WIDTH or frame.shape[0] != Config.FRAME_HEIGHT:
+                    frame = cv2.resize(frame, (Config.FRAME_WIDTH, Config.FRAME_HEIGHT))
+                
+                self.frames.append(frame)
+                frame_count += 1
+                
+                # Log progreso cada 100 frames
+                if frame_count % 100 == 0:
+                    logging.info(f"Loaded {frame_count}/{total_frames} frames")
+                
+            cap.release()
+            self.is_loaded = True
+            
+            logging.info(f"Successfully loaded {len(self.frames)} frames from test video")
+            return True
+            
+        except Exception as e:
+            logging.error(f"Error loading test video: {e}")
+            return False
+    
+    def get_next_frame(self):
+        """Obtiene el siguiente frame del video de prueba con control de FPS preciso"""
+        if not self.frames:
+            return None
+            
+        # Control de FPS más preciso
+        current_time = time.time()
+        elapsed = current_time - self.last_frame_time
+        
+        if elapsed < self.frame_delay:
+            time.sleep(self.frame_delay - elapsed)
+            
+        # Obtener frame actual (copia para evitar modificaciones)
+        frame = self.frames[self.current_frame_index].copy()
+        
+        # Avanzar al siguiente frame (loop infinito)
+        self.current_frame_index = (self.current_frame_index + 1) % len(self.frames)
+        self.last_frame_time = time.time()
+        
+        return frame
+    
+    def get_total_frames(self):
+        """Retorna el número total de frames cargados"""
+        return len(self.frames)
 
 
 class Camera:
@@ -54,7 +230,7 @@ class Camera:
             self.video_capture.set(cv2.CAP_PROP_FPS, Config.TARGET_FPS)
             
             # Probar captura de un frame
-            ret, _ = self.video_capture.read()
+            ret, test_frame = self.video_capture.read()
             if not ret:
                 raise RuntimeError("Cannot read from camera")
                 
@@ -83,6 +259,9 @@ class Camera:
         else:
             success, frame = self.video_capture.read()
             if success:
+                # Redimensionar si es necesario
+                if frame.shape[1] != Config.FRAME_WIDTH or frame.shape[0] != Config.FRAME_HEIGHT:
+                    frame = cv2.resize(frame, (Config.FRAME_WIDTH, Config.FRAME_HEIGHT))
                 return frame
             return None
 
@@ -100,77 +279,13 @@ class Camera:
             self.video_capture = None
 
 
-class VideoFrameProvider:
-    """Proveedor de frames optimizado para video de prueba"""
-    
-    def __init__(self):
-        self.cap = None
-        self.target_fps = Config.TARGET_FPS
-        self.frame_delay = 1.0 / self.target_fps
-        self.last_frame_time = time.time()
-        self.is_loaded = False
-        
-    def load_test_video(self, video_path):
-        """Carga el video de prueba sin cargar todos los frames en memoria"""
-        try:
-            self.cap = cv2.VideoCapture(video_path)
-            if not self.cap.isOpened():
-                logging.error(f"Cannot open test video: {video_path}")
-                return False
-                
-            # Configurar propiedades del video
-            self.video_fps = self.cap.get(cv2.CAP_PROP_FPS)
-            self.total_frames = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
-            
-            # Ajustar el delay si el FPS del video es diferente al target
-            if self.video_fps > 0 and self.video_fps != self.target_fps:
-                self.frame_delay = 1.0 / self.video_fps
-                logging.warning(f"Video FPS ({self.video_fps}) differs from target FPS ({self.target_fps}). Using video FPS.")
-            
-            logging.info(f"Video loaded: {self.total_frames} frames at {self.video_fps} FPS")
-            self.is_loaded = True
-            return True
-            
-        except Exception as e:
-            logging.error(f"Error loading test video: {e}")
-            return False
-    
-    def get_next_frame(self):
-        """Obtiene el siguiente frame del video con control preciso de FPS"""
-        if not self.is_loaded or not self.cap:
-            return None
-            
-        # Calcular tiempo hasta el próximo frame
-        current_time = time.time()
-        elapsed = current_time - self.last_frame_time
-        sleep_time = max(0, self.frame_delay - elapsed)
-        
-        if sleep_time > 0:
-            time.sleep(sleep_time)
-        
-        # Leer frame
-        ret, frame = self.cap.read()
-        
-        # Si llegamos al final, reiniciar
-        if not ret:
-            self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
-            ret, frame = self.cap.read()
-            if not ret:
-                return None
-        
-        self.last_frame_time = time.time()
-        return frame
-    
-    def get_total_frames(self):
-        """Retorna el número total de frames en el video"""
-        return self.total_frames if self.is_loaded else 0
-
-
 class RaspberryPiDetector:
     def __init__(self):
+        Config.validate_config()
+        
         self.camera = Camera()
         self.object_detector = ObjectDetector()
-        self.processing_server_hostname = Config.PROCESSING_SERVER_HOSTNAME
+        self.processing_server_url = Config.get_processing_server_url()
         self.current_frame = None
         self.running = True
         
@@ -181,8 +296,8 @@ class RaspberryPiDetector:
         self.start_time = time.time()
         
         logging.info(f"Raspberry Pi Detector initialized")
-        logging.info(f"Using {Config.NUM_THREADS} threads for detection")
-        logging.info(f"Processing server: {self.processing_server_hostname}")
+        logging.info(f"Using {Config.get_num_threads()} threads for detection")
+        logging.info(f"Processing server: {self.processing_server_url}")
         logging.info(f"Camera fallback mode: {self.camera.use_fallback}")
         logging.info(f"Target FPS: {Config.TARGET_FPS}")
 
@@ -192,11 +307,12 @@ class RaspberryPiDetector:
             while self.running and self.camera.isOpened():
                 frame_start_time = time.time()
                 frame = self.camera.frame()
-
+                
                 if frame is None:
-                    logging.warning("Frame is None, skipping detection cycle.")
+                    logging.warning("Failed to capture frame")
+                    time.sleep(0.1)
                     continue
-
+                
                 self.current_frame = frame
                 time_localtime = time.localtime()
                 
@@ -226,7 +342,7 @@ class RaspberryPiDetector:
                 frame_time = time.time() - frame_start_time
                 self.frame_times.append(frame_time)
                 
-                if len(self.frame_times) >= Config.TARGET_FPS:
+                if len(self.frame_times) >= Config.FPS_CALCULATION_FRAMES:
                     average_frame_time = sum(self.frame_times) / len(self.frame_times)
                     self.fps = round(1/average_frame_time, 2)
                     self.frame_times = []
@@ -245,9 +361,9 @@ class RaspberryPiDetector:
                 # Enviar datos al servidor de procesamiento
                 try:
                     response = requests.post(
-                        f"{self.processing_server_hostname}/process_frame",
-                        timeout=15,
-                        json=data
+                        f"{self.processing_server_url}/process_frame",
+                        json=data,
+                        timeout=Config.get_network_timeout()
                     )
                     
                     if response.status_code == 200:
@@ -257,12 +373,22 @@ class RaspberryPiDetector:
                         
                 except requests.exceptions.RequestException as e:
                     logging.error(f"Error sending data to processing server: {e}")
-                    time.sleep(3)
+                    time.sleep(Config.get_retry_delay())
+                
+                # Control de FPS para no saturar el procesador
+                elapsed = time.time() - frame_start_time
+                target_frame_time = 1.0 / Config.TARGET_FPS
+                if elapsed < target_frame_time:
+                    time.sleep(target_frame_time - elapsed)
                 
         except Exception as e:
             logging.error(f"Error in capture_and_detect: {e}", exc_info=True)
         finally:
             self.camera.release()
+
+    def get_current_frame(self):
+        """Retorna el frame actual para stream directo"""
+        return self.current_frame
 
     def get_stats(self):
         """Retorna estadísticas del detector"""
@@ -272,17 +398,8 @@ class RaspberryPiDetector:
             "frames_processed": self.frames_processed,
             "uptime_seconds": round(uptime, 2),
             "camera_fallback": self.camera.use_fallback,
-            "detection_threads": Config.NUM_THREADS
+            "detection_threads": Config.get_num_threads()
         }
-
-    def restart(self):
-        if not self.running:
-            self.camera = Camera()
-            self.running = True
-            thread = threading.Thread(target=self.capture_and_detect)
-            thread.daemon = True
-            thread.start()
-            logging.info("Detector restarted.")
 
     def stop(self):
         """Detiene el detector"""
@@ -295,11 +412,7 @@ if __name__ == "__main__":
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s - %(levelname)s - %(message)s",
-        datefmt="%B%d/%Y %H:%M:%S",
-        handlers=[
-            logging.FileHandler(Config.LOG_FILE_PATH),
-            logging.StreamHandler()
-        ]
+        datefmt="%B%d/%Y %H:%M:%S"
     )
 
     try:
@@ -315,16 +428,29 @@ if __name__ == "__main__":
         app = Flask(__name__)
         CORS(app)
 
+        # Agregar validación antes de cada request
+        @app.before_request
+        def validate_ip():
+            client_ip = request.remote_addr
+
+            # Endpoints administrativos (stream, status)
+            admin_endpoints = ['raw_stream', 'status', 'index']
+            
+            if request.endpoint in admin_endpoints:
+                if not SecurityMiddleware.is_admin_allowed(client_ip):
+                    logging.warning(f"Unauthorized admin access attempt from: {client_ip}")
+                    abort(403)
+
         @app.route("/")
         def index():
             return jsonify({
                 "status": "running",
                 "service": "raspberry-pi-detector",
-                "processing_server": Config.PROCESSING_SERVER_HOSTNAME,
+                "processing_server": Config.get_processing_server_url(),
                 "camera_fallback": detector.camera.use_fallback,
                 "config": {
                     "target_fps": Config.TARGET_FPS,
-                    "detection_threads": Config.NUM_THREADS,
+                    "detection_threads": Config.get_num_threads(),
                     "frame_resolution": f"{Config.FRAME_WIDTH}x{Config.FRAME_HEIGHT}"
                 }
             })
@@ -334,30 +460,30 @@ if __name__ == "__main__":
             stats = detector.get_stats()
             return jsonify({
                 "camera_opened": detector.camera.isOpened(),
-                "processing_server": Config.PROCESSING_SERVER_HOSTNAME,
+                "processing_server": Config.get_processing_server_url(),
                 **stats
             })
-        
-        @app.route("/logs")
-        def get_logs():
-            try:
-                with open(Config.LOG_FILE_PATH, "r") as f:
-                    return jsonify({"log": f.read()})
-            except Exception as e:
-                return jsonify({"error": str(e)}), 500
-        
-        @app.route("/shutdown", methods=["POST"])
-        def shutdown():
-            detector.stop()
-            return jsonify({"status": "detector stopped"})
-        
-        @app.route("/restart", methods=["POST"])
-        def restart():
-            if not detector.running:
-                detector.restart()
-                return jsonify({"status": "detector restarted"})
-            else:
-                return jsonify({"status": "detector already running"}), 400
+
+        @app.route("/raw_stream")
+        def raw_stream():
+            """Stream de video directo desde la cámara (solo para debugging)"""
+            def generate():
+                while True:
+                    frame = detector.get_current_frame()
+                    if frame is not None:
+                        # Añadir información de debugging
+                        cv2.putText(frame, f"RAW FEED - FPS: {detector.fps}", 
+                                   (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                        cv2.putText(frame, f"Threads: {Config.get_num_threads()}", 
+                                   (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                        
+                        _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, Config.STREAM_QUALITY])
+                        yield (b'--frame\r\n'
+                               b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
+                    
+                    time.sleep(1.0 / Config.STREAM_FPS)
+            
+            return Response(generate(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
         logging.info("Starting Raspberry Pi detector service on port 8080")
         app.run(host="0.0.0.0", port=8080, threaded=True)
