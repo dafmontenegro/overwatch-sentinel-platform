@@ -20,7 +20,7 @@ class Config:
     # Video
     FRAME_WIDTH = 1280
     FRAME_HEIGHT = 720
-    TARGET_FPS = 24
+    TARGET_FPS = 30
 
     # Video de respaldo y para pruebas
     FALLBACK_VIDEO = "test.mp4"
