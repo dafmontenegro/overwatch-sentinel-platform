@@ -388,7 +388,7 @@ Service Discovert Pattern
 #### Escenario 3: Cluster Pattern
 
 **Descripción**
-Alta disponibilidad del servicio de autenticación
+Alta disponibilidad del servicio de frontend web
 
 **Patrón aplicado**
 
