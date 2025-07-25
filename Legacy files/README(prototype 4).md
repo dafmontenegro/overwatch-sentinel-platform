@@ -358,6 +358,8 @@ Identificar el límite de espectadores concurrentes antes de colapsar.
 
 ## Fiabilidad
 
+### Escenarios de fiabilidad (alta disponibilidad, resiliencia o tolerancia a fallos).
+
 #### Escenario 1: Replication Pattern
 **Descripción**
 Fallo en una instancia del servicio API Gateway durante picos de carga.
