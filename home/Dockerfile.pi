@@ -9,8 +9,9 @@ RUN apt-get update && apt-get install -y \
     libxext6 \
     libxrender-dev \
     libgomp1 \
-    libgthread-2.0-0 \
+    libusb-1.0-0 \
     wget \
+    unzip \
     && rm -rf /var/lib/apt/lists/*
 
 # Establecer directorio de trabajo
@@ -23,10 +24,7 @@ COPY raspberry-pi/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Descargar modelo de detección de objetos
-RUN wget https://storage.googleapis.com/download.tensorflow.org/models/tflite/coco_ssd_mobilenet_v1_1.0_quant_2018_06_29.zip \
-    && unzip coco_ssd_mobilenet_v1_1.0_quant_2018_06_29.zip \
-    && mv detect.tflite efficientdet_lite0.tflite \
-    && rm coco_ssd_mobilenet_v1_1.0_quant_2018_06_29.zip
+RUN wget https://storage.googleapis.com/download.tensorflow.org/models/tflite/task_library/object_detection/rpi/lite-model_efficientdet_lite0_detection_metadata_1.tflite -O efficientdet_lite0.tflite
 
 # Copiar código fuente desde la carpeta raspberry-pi
 COPY raspberry-pi/ .
